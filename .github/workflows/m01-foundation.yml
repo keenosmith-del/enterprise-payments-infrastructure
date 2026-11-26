@@ -198,6 +198,17 @@ jobs:
           docker compose --env-file .local/epi.env --profile analytics run --rm data-engineering
           curl --retry 15 --retry-delay 2 --retry-all-errors -fsS http://127.0.0.1:9090/-/ready > /dev/null
           curl --retry 15 --retry-delay 2 --retry-all-errors -fsS http://127.0.0.1:3000/api/health > /dev/null
+          for attempt in $(seq 1 20); do
+            if curl -fsSG 'http://127.0.0.1:9090/api/v1/query' --data-urlencode 'query=up{job="epi-foundation"}' | python -c 'import json,sys; data=json.load(sys.stdin); sys.exit(0 if len(data["data"]["result"]) == 4 and all(x["value"][1] == "1" for x in data["data"]["result"]) else 1)'; then break; fi
+            if [[ "$attempt" == 20 ]]; then exit 1; fi
+            sleep 3
+          done
+          docker compose --env-file .local/epi.env stop keycloak
+          for port in 8001 8002 8003 8004; do
+            test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:$port/health/ready)" = 503
+            test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:$port/health/live)" = 200
+          done
+          docker compose --env-file .local/epi.env start keycloak
           docker compose --env-file .local/epi.env restart postgres
           docker compose --env-file .local/epi.env up -d --wait
           for port in 8001 8002 8003 8004; do

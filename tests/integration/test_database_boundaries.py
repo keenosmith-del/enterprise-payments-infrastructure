@@ -54,7 +54,8 @@ def test_bootstrap_migrate_seed_and_role_isolation() -> None:
         runtime_url = url.replace(f"{app}_migration:", f"{app}_runtime:").replace(
             os.environ[f"EPI_{app.upper()}_MIGRATION_PASSWORD"], os.environ[f"EPI_{app.upper()}_RUNTIME_PASSWORD"])
         with TestClient(create_app(app.replace("_", "-"), Settings(database_url=runtime_url))) as client:
-            assert client.get("/health/ready").status_code == 200
+            # Identity is intentionally absent in this database-only test.
+            assert client.get("/health/ready").status_code == 503
         with psycopg.connect(migration) as conn:
             assert conn.execute("SELECT tableowner FROM pg_tables WHERE schemaname='public' AND tablename='tenant'").fetchone()[0] == f"{app}_owner"
         for kind in ("runtime", "migration"):

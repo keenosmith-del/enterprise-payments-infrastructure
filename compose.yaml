@@ -37,6 +37,8 @@ services:
       KC_BOOTSTRAP_ADMIN_USERNAME: ${EPI_KEYCLOAK_ADMIN:?generate local credentials}
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${EPI_KEYCLOAK_ADMIN_PASSWORD:?generate local credentials}
       KC_HOSTNAME: http://127.0.0.1:8180
+    volumes:
+      - keycloak_data:/opt/keycloak/data
     ports:
       - "127.0.0.1:8180:8080"
   identity-setup:
@@ -251,3 +253,4 @@ volumes:
   postgres_data:
   grafana_data:
   rabbit_data:
+  keycloak_data:

@@ -28,4 +28,5 @@ def test_repeatable_migration_and_readiness(app: str) -> None:
     finally:
         engine.dispose()
     client = TestClient(create_app(app, Settings(database_url=url)))
-    assert client.get("/health/ready").status_code == 200
+    # Identity is intentionally absent in this database-only test.
+    assert client.get("/health/ready").status_code == 503

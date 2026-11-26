@@ -4,6 +4,8 @@ import json
 import logging
 import time
 import uuid
+import urllib.error
+import urllib.request
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import AsyncIterator
@@ -72,6 +74,8 @@ def create_app(name: str, settings: Settings | None = None) -> FastAPI:
     app = FastAPI(title=name, docs_url="/docs" if config.environment == "development" else None,
                   redoc_url=None, lifespan=lifespan)
 
+    app.state.tracer_provider = provider
+
     @app.middleware("http")
     async def request_context(request: Request, call_next: RequestResponseEndpoint) -> Response:
         request_id = str(uuid.uuid4())
@@ -108,14 +112,18 @@ def create_app(name: str, settings: Settings | None = None) -> FastAPI:
 
     @app.get("/health/ready", response_model=None)
     def ready() -> dict[str, str] | JSONResponse:
-        if engine is None or not heads:
+        if engine is None or not heads or verifier is None:
             return JSONResponse(status_code=503, content={"status": "not_ready"})
         try:
             with engine.connect() as conn:
                 revisions = set(conn.execute(text("SELECT version_num FROM foundation_schema_revision")).scalars())
                 if revisions != heads:
                     return JSONResponse(status_code=503, content={"status": "not_ready"})
-        except SQLAlchemyError:
+            with urllib.request.urlopen(config.oidc_jwks_url, timeout=3) as response:
+                jwks = json.loads(response.read(1024 * 1024))
+                if response.status != 200 or not isinstance(jwks.get("keys"), list) or not jwks["keys"]:
+                    return JSONResponse(status_code=503, content={"status": "not_ready"})
+        except (SQLAlchemyError, urllib.error.URLError, TimeoutError, ValueError, AttributeError):
             return JSONResponse(status_code=503, content={"status": "not_ready"})
         return {"status": "ready"}
 

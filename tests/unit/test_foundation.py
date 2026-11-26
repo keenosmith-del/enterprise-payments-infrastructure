@@ -50,3 +50,19 @@ def test_metrics_reflect_real_request() -> None:
         client.get("/health/live")
         response = client.get("/metrics")
         assert 'epi_http_requests_total{method="GET",status="200"} 1.0' in response.text
+
+
+def test_trace_instrumentation_omits_request_secrets(caplog) -> None:
+    from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+    from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
+
+    app = create_app("test", Settings(database_url=""))
+    exporter = InMemorySpanExporter()
+    app.state.tracer_provider.add_span_processor(SimpleSpanProcessor(exporter))
+    with TestClient(app) as client:
+        assert client.get("/health/live?secret=private-value", headers={"Authorization": "Bearer private-value"}).status_code == 200
+    spans = exporter.get_finished_spans()
+    assert len(spans) == 1
+    assert spans[0].name == "http.request"
+    assert "private-value" not in str(spans[0].attributes)
+    assert "private-value" not in caplog.text
