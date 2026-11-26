@@ -1,0 +1,18 @@
+services:
+  rabbitmq:
+    image: rabbitmq:4.1-management
+    environment:
+      RABBITMQ_DEFAULT_USER: "${EPI_RABBIT_ADMIN:?set EPI_RABBIT_ADMIN}"
+      RABBITMQ_DEFAULT_PASS: "${EPI_RABBIT_ADMIN_PASSWORD:?set EPI_RABBIT_ADMIN_PASSWORD}"
+    ports:
+      - "127.0.0.1:${EPI_RABBIT_PORT:-5672}:5672"
+      - "127.0.0.1:${EPI_RABBIT_MANAGEMENT_PORT:-15672}:15672"
+    volumes:
+      - rabbit_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+volumes:
+  rabbit_data:
