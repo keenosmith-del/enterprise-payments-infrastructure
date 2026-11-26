@@ -33,3 +33,30 @@ jobs:
       - run: npm audit --audit-level=moderate
       - run: npm run typecheck
       - run: npm run build
+  migration-smoke:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.14'
+      - run: python -m pip install --require-hashes -r requirements.lock
+      - name: Start disposable PostgreSQL and test migrations
+        run: |
+          password="$(openssl rand -hex 24)"
+          echo "::add-mask::$password"
+          docker run -d --name epi-m01-pg -e POSTGRES_PASSWORD="$password" -p 127.0.0.1:55433:5432 postgres:17
+          for attempt in $(seq 1 30); do
+            if docker exec epi-m01-pg pg_isready -U postgres; then break; fi
+            sleep 1
+          done
+          for db in policy_administration payments_hub banking_simulator payroll_simulator; do
+            docker exec epi-m01-pg createdb -U postgres "$db"
+          done
+          export EPI_TEST_BASE_URL="postgresql+psycopg://postgres:$password@127.0.0.1:55433"
+          python -m pytest tests/integration/test_migrations.py -q
+      - name: Remove disposable database
+        if: always()
+        run: docker rm -f epi-m01-pg || true
