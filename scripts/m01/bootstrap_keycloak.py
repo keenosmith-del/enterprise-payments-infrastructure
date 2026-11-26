@@ -81,6 +81,11 @@ def bootstrap() -> None:
     request(root + "/clients", {"clientId": "integration-service", "enabled": True, "publicClient": False,
             "serviceAccountsEnabled": True, "standardFlowEnabled": False, "directAccessGrantsEnabled": False,
             "secret": os.environ["EPI_KEYCLOAK_SERVICE_SECRET"], "protocolMappers": service_mappers}, admin)
+    service_clients = request(root + "/clients?clientId=integration-service", token=admin, method="GET")
+    service_id = service_clients[0]["id"]
+    service_client = request(root + f"/clients/{service_id}", token=admin, method="GET")
+    service_client["secret"] = os.environ["EPI_KEYCLOAK_SERVICE_SECRET"]
+    request(root + f"/clients/{service_id}", service_client, admin, method="PUT")
     profile = request(root + "/users/profile", token=admin, method="GET")
     changed = False
     for attribute_name in ("tenant_ids", "legal_entity_ids"):
