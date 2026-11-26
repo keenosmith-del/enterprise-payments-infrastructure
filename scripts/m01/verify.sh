@@ -17,11 +17,18 @@ set +a
 python -m pytest tests/integration/test_keycloak.py tests/integration/test_stack_authorization.py -v
 npx playwright test tests/browser --workers=1
 python -m pytest tests/integration/test_rabbit_permissions.py -v
+docker compose --env-file .local/epi.env --profile integration build enterprise-integration
+python scripts/m01/publish_probe.py
+message="$(docker compose --env-file .local/epi.env --profile integration run --rm -T --no-deps enterprise-integration | tr -d '\r')"
+test "$message" = synthetic-technical-probe
 scripts/m01/create_sftp_keys.sh
 docker compose --env-file .local/epi.env --profile sftp up -d --build --wait sftp
 scripts/m01/probe_dev_sftp.sh
 bash scripts/m00/probe_sftp_ssh.sh
 docker compose --env-file .local/epi.env --profile analytics run --rm data-engineering
+docker compose --env-file .local/epi.env --profile observability up -d --wait prometheus grafana
+curl --retry 15 --retry-delay 2 --retry-all-errors -fsS "http://127.0.0.1:${EPI_PROMETHEUS_PORT:-9090}/-/ready" >/dev/null
+curl --retry 15 --retry-delay 2 --retry-all-errors -fsS "http://127.0.0.1:${EPI_GRAFANA_PORT:-3000}/api/health" >/dev/null
 python -m unittest discover -s scripts/m00 -p test_local_probes.py -v
 
 # The database privilege suite creates and alters roles, so isolate it from the core cluster.
