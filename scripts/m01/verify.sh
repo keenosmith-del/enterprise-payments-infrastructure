@@ -56,10 +56,14 @@ export EPI_M00_AMQP_PASSWORD="$(openssl rand -hex 24)"
 mask "$EPI_M00_POSTGRES_PASSWORD"
 mask "$EPI_M00_AMQP_PASSWORD"
 docker run -d --name "$m00_database" -e POSTGRES_USER=epi_probe -e POSTGRES_PASSWORD="$EPI_M00_POSTGRES_PASSWORD" -p 127.0.0.1:55434:5432 postgres:17-bookworm >/dev/null
-docker run -d --name "$m00_broker" -e RABBITMQ_DEFAULT_USER=epi_probe -e RABBITMQ_DEFAULT_PASS="$EPI_M00_AMQP_PASSWORD" -p 127.0.0.1:55672:5672 rabbitmq:4.2 >/dev/null
+docker run -d --name "$m00_broker" -e RABBITMQ_DEFAULT_USER=epi_probe -e RABBITMQ_DEFAULT_PASS="$EPI_M00_AMQP_PASSWORD" -e 'RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=+S 2:2 +A 2' -p 127.0.0.1:55672:5672 rabbitmq:4.2 >/dev/null
 for attempt in $(seq 1 60); do
-  if docker exec "$m00_database" pg_isready -U epi_probe >/dev/null 2>&1 && docker exec "$m00_broker" rabbitmq-diagnostics -q ping >/dev/null 2>&1; then break; fi
-  if [[ "$attempt" == 60 ]]; then exit 1; fi
+  if docker exec "$m00_database" pg_isready -U epi_probe >/dev/null 2>&1 && python -c 'import os,pika; c=pika.BlockingConnection(pika.ConnectionParameters("127.0.0.1", 55672, "/", pika.PlainCredentials("epi_probe", os.environ["EPI_M00_AMQP_PASSWORD"]), socket_timeout=2)); c.close()' >/dev/null 2>&1; then break; fi
+  if [[ "$attempt" == 60 ]]; then
+    docker logs --tail 40 "$m00_database" >&2
+    docker logs --tail 40 "$m00_broker" >&2
+    exit 1
+  fi
   sleep 2
 done
 export EPI_M00_POSTGRES_DSN="postgresql://epi_probe:$EPI_M00_POSTGRES_PASSWORD@127.0.0.1:55434/epi_probe"
