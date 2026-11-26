@@ -1,5 +1,6 @@
 services:
   postgres:
+    mem_limit: ${EPI_POSTGRES_MEMORY_LIMIT:-512m}
     image: postgres:17@sha256:87c8b42f423b45d5247e6aa8fdb2e7762fec164c68a50fe3eb07e7bfcaf4dbcf
     environment:
       POSTGRES_PASSWORD: ${EPI_POSTGRES_ADMIN_PASSWORD:?generate local credentials}
@@ -13,6 +14,7 @@ services:
       timeout: 3s
       retries: 30
   database-setup:
+    mem_limit: ${EPI_DATABASE_SETUP_MEMORY_LIMIT:-512m}
     build:
       context: .
       dockerfile: infrastructure/docker/backend.Dockerfile
@@ -31,6 +33,7 @@ services:
     depends_on:
       postgres: { condition: service_healthy }
   keycloak:
+    mem_limit: ${EPI_KEYCLOAK_MEMORY_LIMIT:-1g}
     image: quay.io/keycloak/keycloak:26.3.5@sha256:357829ec7c4693397533035092ad13b0644bcc95ded311f33a3738c4d9e9bdba
     command: ["start-dev"]
     environment:
@@ -42,6 +45,7 @@ services:
     ports:
       - "127.0.0.1:8180:8080"
   identity-setup:
+    mem_limit: ${EPI_IDENTITY_SETUP_MEMORY_LIMIT:-512m}
     build:
       context: .
       dockerfile: infrastructure/docker/backend.Dockerfile
@@ -58,6 +62,7 @@ services:
       keycloak: { condition: service_started }
     restart: on-failure:10
   policy-administration-backend:
+    mem_limit: ${EPI_POLICY_ADMINISTRATION_BACKEND_MEMORY_LIMIT:-256m}
     build:
       context: .
       dockerfile: infrastructure/docker/backend.Dockerfile
@@ -79,6 +84,7 @@ services:
       timeout: 5s
       retries: 18
   policy-administration-frontend:
+    mem_limit: ${EPI_POLICY_ADMINISTRATION_FRONTEND_MEMORY_LIMIT:-128m}
     build:
       context: .
       dockerfile: infrastructure/docker/frontend.Dockerfile
@@ -90,6 +96,7 @@ services:
     ports:
       - "127.0.0.1:5173:8080"
   payments-hub-backend:
+    mem_limit: ${EPI_PAYMENTS_HUB_BACKEND_MEMORY_LIMIT:-256m}
     build:
       context: .
       dockerfile: infrastructure/docker/backend.Dockerfile
@@ -111,6 +118,7 @@ services:
       timeout: 5s
       retries: 18
   payments-hub-frontend:
+    mem_limit: ${EPI_PAYMENTS_HUB_FRONTEND_MEMORY_LIMIT:-128m}
     build:
       context: .
       dockerfile: infrastructure/docker/frontend.Dockerfile
@@ -122,6 +130,7 @@ services:
     ports:
       - "127.0.0.1:5174:8080"
   banking-simulator-backend:
+    mem_limit: ${EPI_BANKING_SIMULATOR_BACKEND_MEMORY_LIMIT:-256m}
     build:
       context: .
       dockerfile: infrastructure/docker/backend.Dockerfile
@@ -143,6 +152,7 @@ services:
       timeout: 5s
       retries: 18
   banking-simulator-frontend:
+    mem_limit: ${EPI_BANKING_SIMULATOR_FRONTEND_MEMORY_LIMIT:-128m}
     build:
       context: .
       dockerfile: infrastructure/docker/frontend.Dockerfile
@@ -154,6 +164,7 @@ services:
     ports:
       - "127.0.0.1:5175:8080"
   payroll-simulator-backend:
+    mem_limit: ${EPI_PAYROLL_SIMULATOR_BACKEND_MEMORY_LIMIT:-256m}
     build:
       context: .
       dockerfile: infrastructure/docker/backend.Dockerfile
@@ -175,6 +186,7 @@ services:
       timeout: 5s
       retries: 18
   payroll-simulator-frontend:
+    mem_limit: ${EPI_PAYROLL_SIMULATOR_FRONTEND_MEMORY_LIMIT:-128m}
     build:
       context: .
       dockerfile: infrastructure/docker/frontend.Dockerfile
@@ -186,6 +198,7 @@ services:
     ports:
       - "127.0.0.1:5176:8080"
   rabbitmq:
+    mem_limit: ${EPI_RABBITMQ_MEMORY_LIMIT:-512m}
     image: rabbitmq:4.1-management@sha256:abcf6bc2eb4ff990bf041e605c485938739c5c98c513e0bc30a0ae9d0664be45
     environment:
       RABBITMQ_DEFAULT_USER: ${EPI_RABBIT_ADMIN:?generate local credentials}
@@ -201,6 +214,7 @@ services:
       timeout: 5s
       retries: 18
   rabbitmq-setup:
+    mem_limit: ${EPI_RABBITMQ_SETUP_MEMORY_LIMIT:-512m}
     build:
       context: .
       dockerfile: infrastructure/docker/backend.Dockerfile
@@ -218,6 +232,7 @@ services:
     depends_on:
       rabbitmq: { condition: service_healthy }
   enterprise-integration:
+    mem_limit: ${EPI_ENTERPRISE_INTEGRATION_MEMORY_LIMIT:-256m}
     profiles: [integration]
     build:
       context: .
@@ -230,6 +245,7 @@ services:
     depends_on:
       rabbitmq-setup: { condition: service_completed_successfully }
   sftp:
+    mem_limit: ${EPI_SFTP_MEMORY_LIMIT:-128m}
     profiles: [sftp]
     build:
       context: ./scripts/m00/sftp
@@ -243,6 +259,7 @@ services:
       - sftp_partner_a:/srv/sftp/partner_a/inbox
       - sftp_partner_b:/srv/sftp/partner_b/inbox
   data-engineering:
+    mem_limit: ${EPI_DATA_ENGINEERING_MEMORY_LIMIT:-512m}
     profiles: [analytics]
     build:
       context: .
@@ -250,6 +267,7 @@ services:
       args: { APP_NAME: payments-hub }
     command: ["python", "services/data-engineering/technical_smoke.py"]
   prometheus:
+    mem_limit: ${EPI_PROMETHEUS_MEMORY_LIMIT:-256m}
     profiles: [observability]
     image: prom/prometheus:v3.5.0@sha256:63805ebb8d2b3920190daf1cb14a60871b16fd38bed42b857a3182bc621f4996
     volumes:
@@ -257,6 +275,7 @@ services:
     ports:
       - "127.0.0.1:9090:9090"
   grafana:
+    mem_limit: ${EPI_GRAFANA_MEMORY_LIMIT:-384m}
     profiles: [observability]
     image: grafana/grafana:12.1.1@sha256:a1701c2180249361737a99a01bc770db39381640e4d631825d38ff4535efa47d
     environment:
