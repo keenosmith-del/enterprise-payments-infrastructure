@@ -72,6 +72,13 @@ def bootstrap() -> None:
             if not any(existing.get("name") == mapper["name"] for existing in existing_mappers):
                 request(root + f"/clients/{client_id}/protocol-mappers/models", mapper, admin)
         request(root + f"/clients/{client_id}/default-client-scopes/{scope_id}", {}, admin, method="PUT")
+    # Test-only direct grant clients exercise scope denial and expiry against real tokens.
+    negative_mappers = [dict(mapper) for mapper in mappers]
+    negative_mappers[0] = {**negative_mappers[0], "config": {"included.custom.audience": "payments-hub", "access.token.claim": "true"}}
+    for client_name, attributes in (("scope-negative", {}), ("expiry-test", {"access.token.lifespan": "1"})):
+        request(root + "/clients", {"clientId": client_name, "enabled": True, "publicClient": True,
+                "standardFlowEnabled": False, "directAccessGrantsEnabled": True,
+                "attributes": attributes, "protocolMappers": negative_mappers}, admin)
     service_mappers = [
         {"name": "audience", "protocol": "openid-connect", "protocolMapper": "oidc-audience-mapper",
          "config": {"included.custom.audience": "payments-hub", "access.token.claim": "true"}},

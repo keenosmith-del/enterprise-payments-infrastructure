@@ -1,6 +1,10 @@
 """Exercise signed Keycloak tokens against actual running backend and database."""
 import json
 import os
+import time
+
+import jwt
+from cryptography.hazmat.primitives.asymmetric import rsa
 import urllib.error
 import urllib.request
 
@@ -43,3 +47,22 @@ def test_service_identity_cannot_impersonate_human():
         "grant_type": "client_credentials", "client_id": "integration-service",
         "client_secret": os.environ["EPI_KEYCLOAK_SERVICE_SECRET"]}, form=True)["access_token"]
     assert get(8002, f"/tenants/{TENANT_A}/legal-entities", service)[0] == 403
+
+
+def test_scope_signature_and_expiry_fail_closed():
+    password = os.environ["EPI_KEYCLOAK_USER_PASSWORD"]
+    path = f"/tenants/{TENANT_A}/legal-entities"
+    no_scope = token("synthetic-user", password, "scope-negative", "epi")
+    claims = jwt.decode(no_scope, options={"verify_signature": False})
+    assert "foundation-reader" in claims["realm_access"]["roles"]
+    assert "foundation.read" not in claims.get("scope", "").split()
+    assert get(8002, path, no_scope)[0] == 403
+    valid = token("synthetic-user", password, "payments-hub", "epi")
+    payload = jwt.decode(valid, options={"verify_signature": False})
+    header = jwt.get_unverified_header(valid)
+    wrong_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    forged = jwt.encode(payload, wrong_key, algorithm="RS256", headers={"kid": header["kid"]})
+    assert get(8002, path, forged)[0] == 401
+    expired = token("synthetic-user", password, "expiry-test", "epi")
+    time.sleep(3)
+    assert get(8002, path, expired)[0] == 401
