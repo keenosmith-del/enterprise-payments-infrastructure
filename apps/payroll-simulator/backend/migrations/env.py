@@ -18,6 +18,9 @@ else:
         context.configure(connection=connection)
         with context.begin_transaction():
             context.run_migrations()
+        # Readiness can inspect the revision without access to migration administration.
+        connection.execute(text("CREATE OR REPLACE VIEW foundation_schema_revision AS SELECT version_num FROM alembic_version"))
+        connection.execute(text("GRANT SELECT ON foundation_schema_revision TO payroll_simulator_runtime"))
         # Grant only application records, never Alembic's administration table.
         connection.execute(text("GRANT SELECT, INSERT, UPDATE, DELETE ON tenant, legal_entity TO payroll_simulator_runtime"))
         connection.commit()

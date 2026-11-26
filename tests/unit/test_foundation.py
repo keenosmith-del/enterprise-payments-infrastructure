@@ -21,3 +21,12 @@ def test_readiness_fails_closed_without_database() -> None:
 def test_info_identifies_application() -> None:
     client = TestClient(create_app("test", Settings(database_url="")))
     assert client.get("/info").json()["application"] == "test"
+
+
+def test_correlation_id_is_validated() -> None:
+    client = TestClient(create_app("test", Settings(database_url="")))
+    correlation = "10000000-0000-4000-8000-000000000001"
+    response = client.get("/health/live", headers={"X-Correlation-ID": correlation})
+    assert response.headers["X-Correlation-ID"] == correlation
+    response = client.get("/health/live", headers={"X-Correlation-ID": "untrusted-value"})
+    assert response.headers["X-Correlation-ID"] == response.headers["X-Request-ID"]
