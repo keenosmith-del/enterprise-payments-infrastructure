@@ -176,6 +176,9 @@ jobs:
       - name: Build and start development stack
         run: |
           make bootstrap
+          while IFS='=' read -r name value; do
+            if [[ "$name" == *_PASSWORD || "$name" == *_SECRET ]]; then echo "::add-mask::$value"; fi
+          done < .local/epi.env
           make up
           for port in 5173 5174 5175 5176; do
             curl -fsS "http://127.0.0.1:$port/" > /dev/null
@@ -194,6 +197,9 @@ jobs:
           docker compose --env-file .local/epi.env --profile messaging --profile sftp --profile observability up -d --build --wait rabbitmq sftp prometheus grafana
           docker compose --env-file .local/epi.env run --rm rabbitmq-setup
           python -m pytest tests/integration/test_rabbit_permissions.py -v
+          python scripts/m01/publish_probe.py
+          message="$(docker compose --env-file .local/epi.env --profile integration run --rm enterprise-integration)"
+          test "$message" = synthetic-technical-probe
           for attempt in $(seq 1 10); do
             if scripts/m01/probe_dev_sftp.sh; then break; fi
             if [[ "$attempt" == 10 ]]; then exit 1; fi

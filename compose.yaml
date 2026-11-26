@@ -217,6 +217,18 @@ services:
       EPI_RABBIT_INTEGRATION_PASSWORD: ${EPI_RABBIT_INTEGRATION_PASSWORD:?generate local credentials}
     depends_on:
       rabbitmq: { condition: service_healthy }
+  enterprise-integration:
+    profiles: [integration]
+    build:
+      context: .
+      dockerfile: infrastructure/docker/backend.Dockerfile
+      args: { APP_NAME: payments-hub }
+    command: ["python", "services/enterprise-integration/technical_probe.py"]
+    environment:
+      EPI_RABBIT_HOST: rabbitmq
+      EPI_RABBIT_INTEGRATION_PASSWORD: ${EPI_RABBIT_INTEGRATION_PASSWORD:?generate local credentials}
+    depends_on:
+      rabbitmq-setup: { condition: service_completed_successfully }
   sftp:
     profiles: [sftp]
     build:
