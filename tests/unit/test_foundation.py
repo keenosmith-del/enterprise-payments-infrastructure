@@ -30,3 +30,16 @@ def test_correlation_id_is_validated() -> None:
     assert response.headers["X-Correlation-ID"] == correlation
     response = client.get("/health/live", headers={"X-Correlation-ID": "untrusted-value"})
     assert response.headers["X-Correlation-ID"] == response.headers["X-Request-ID"]
+
+
+def test_protected_endpoint_requires_credentials() -> None:
+    client = TestClient(create_app("test", Settings(database_url="")))
+    response = client.get("/tenants/10000000-0000-4000-8000-000000000001/legal-entities")
+    assert response.status_code == 401
+    assert response.json()["error"] == "request_failed"
+
+
+def test_unconfigured_identity_fails_closed() -> None:
+    client = TestClient(create_app("test", Settings(database_url="")))
+    response = client.get("/tenants/10000000-0000-4000-8000-000000000001/legal-entities", headers={"Authorization": "Bearer untrusted"})
+    assert response.status_code == 503
