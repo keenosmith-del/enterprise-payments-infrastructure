@@ -42,11 +42,13 @@ def test_authenticated_tenant_boundary(app, port):
     assert get(port, f"/tenants/{TENANT_A}/legal-entities", wrong)[0] == 401
 
 
-def test_service_identity_cannot_impersonate_human():
+@pytest.mark.parametrize("app,port", APPS)
+def test_service_identity_cannot_impersonate_human(app, port):
+    secret_name = f"EPI_KEYCLOAK_{app.upper().replace('-', '_')}_SERVICE_SECRET"
     service = request("/realms/epi/protocol/openid-connect/token", {
-        "grant_type": "client_credentials", "client_id": "integration-service",
-        "client_secret": os.environ["EPI_KEYCLOAK_SERVICE_SECRET"]}, form=True)["access_token"]
-    assert get(8002, f"/tenants/{TENANT_A}/legal-entities", service)[0] == 403
+        "grant_type": "client_credentials", "client_id": f"{app}-service",
+        "client_secret": os.environ[secret_name]}, form=True)["access_token"]
+    assert get(port, f"/tenants/{TENANT_A}/legal-entities", service)[0] == 403
 
 
 def test_scope_signature_and_expiry_fail_closed():

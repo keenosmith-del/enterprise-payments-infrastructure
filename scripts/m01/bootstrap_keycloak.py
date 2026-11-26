@@ -84,20 +84,23 @@ def bootstrap() -> None:
         request(root + "/clients", {"clientId": client_name, "enabled": True, "publicClient": True,
                 "standardFlowEnabled": False, "directAccessGrantsEnabled": True,
                 "attributes": attributes, "protocolMappers": negative_mappers}, admin)
-    service_mappers = [
-        {"name": "audience", "protocol": "openid-connect", "protocolMapper": "oidc-audience-mapper",
-         "config": {"included.custom.audience": "payments-hub", "access.token.claim": "true"}},
-        {"name": "principal-kind", "protocol": "openid-connect", "protocolMapper": "oidc-hardcoded-claim-mapper",
-         "config": {"claim.name": "principal_kind", "claim.value": "service", "jsonType.label": "String", "access.token.claim": "true"}},
-    ]
-    request(root + "/clients", {"clientId": "integration-service", "enabled": True, "publicClient": False,
-            "serviceAccountsEnabled": True, "standardFlowEnabled": False, "directAccessGrantsEnabled": False,
-            "secret": os.environ["EPI_KEYCLOAK_SERVICE_SECRET"], "protocolMappers": service_mappers}, admin)
-    service_clients = request(root + "/clients?clientId=integration-service", token=admin, method="GET")
-    service_id = service_clients[0]["id"]
-    service_client = request(root + f"/clients/{service_id}", token=admin, method="GET")
-    service_client["secret"] = os.environ["EPI_KEYCLOAK_SERVICE_SECRET"]
-    request(root + f"/clients/{service_id}", service_client, admin, method="PUT")
+    service_specs = [(f"{app}-service", app, f"EPI_KEYCLOAK_{app.upper().replace('-', '_')}_SERVICE_SECRET") for app in APPS]
+    service_specs.append(("integration-service", "payments-hub", "EPI_KEYCLOAK_SERVICE_SECRET"))
+    for service_name, audience, secret_name in service_specs:
+        service_mappers = [
+            {"name": "audience", "protocol": "openid-connect", "protocolMapper": "oidc-audience-mapper",
+             "config": {"included.custom.audience": audience, "access.token.claim": "true"}},
+            {"name": "principal-kind", "protocol": "openid-connect", "protocolMapper": "oidc-hardcoded-claim-mapper",
+             "config": {"claim.name": "principal_kind", "claim.value": "service", "jsonType.label": "String", "access.token.claim": "true"}},
+        ]
+        request(root + "/clients", {"clientId": service_name, "enabled": True, "publicClient": False,
+                "serviceAccountsEnabled": True, "standardFlowEnabled": False, "directAccessGrantsEnabled": False,
+                "secret": os.environ[secret_name], "protocolMappers": service_mappers}, admin)
+        service_clients = request(root + "/clients?" + urllib.parse.urlencode({"clientId": service_name}), token=admin, method="GET")
+        service_id = service_clients[0]["id"]
+        service_client = request(root + f"/clients/{service_id}", token=admin, method="GET")
+        service_client["secret"] = os.environ[secret_name]
+        request(root + f"/clients/{service_id}", service_client, admin, method="PUT")
     profile = request(root + "/users/profile", token=admin, method="GET")
     changed = False
     for attribute_name in ("tenant_ids", "legal_entity_ids"):

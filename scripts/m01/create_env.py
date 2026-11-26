@@ -14,6 +14,7 @@ for app in APPS:
     for role in ("MIGRATION", "RUNTIME"):
         values[f"EPI_{app}_{role}_PASSWORD"] = secrets.token_hex(24)
     values[f"EPI_RABBIT_{app}_PASSWORD"] = secrets.token_hex(24)
+    values[f"EPI_KEYCLOAK_{app}_SERVICE_SECRET"] = secrets.token_hex(24)
 values["EPI_RABBIT_INTEGRATION_PASSWORD"] = secrets.token_hex(24)
 try:
     fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)

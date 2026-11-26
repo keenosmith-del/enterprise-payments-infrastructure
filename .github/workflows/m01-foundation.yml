@@ -146,6 +146,11 @@ jobs:
           export EPI_KEYCLOAK_LIMITED_PASSWORD="$(openssl rand -hex 24)"
           echo "::add-mask::$EPI_KEYCLOAK_LIMITED_PASSWORD"
           echo "::add-mask::$EPI_KEYCLOAK_SERVICE_SECRET"
+          for app in POLICY_ADMINISTRATION PAYMENTS_HUB BANKING_SIMULATOR PAYROLL_SIMULATOR; do
+            value="$(openssl rand -hex 24)"
+            echo "::add-mask::$value"
+            export "EPI_KEYCLOAK_${app}_SERVICE_SECRET=$value"
+          done
           echo "::add-mask::$EPI_KEYCLOAK_ADMIN_PASSWORD"
           echo "::add-mask::$EPI_KEYCLOAK_USER_PASSWORD"
           docker compose -p epi-m01-identity -f infrastructure/identity/compose.yaml up -d
