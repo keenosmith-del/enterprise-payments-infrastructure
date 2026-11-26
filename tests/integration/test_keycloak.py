@@ -5,7 +5,7 @@ import pytest
 from fastapi import HTTPException
 
 from packages.epi_foundation.identity import OIDCVerifier
-from scripts.m01.bootstrap_keycloak import APPS, token
+from scripts.m01.bootstrap_keycloak import APPS, GROUPS, request, token
 
 ORIGIN = os.getenv("EPI_KEYCLOAK_ORIGIN", "http://127.0.0.1:8180")
 ISSUER = ORIGIN + "/realms/epi"
@@ -25,3 +25,9 @@ def test_keycloak_issued_token_and_wrong_audience(app):
     with pytest.raises(HTTPException) as error:
         wrong.verify(access_token)
     assert error.value.status_code == 401
+
+
+def test_representative_groups_exist():
+    admin = token(os.environ["EPI_KEYCLOAK_ADMIN"], os.environ["EPI_KEYCLOAK_ADMIN_PASSWORD"])
+    groups = request("/admin/realms/epi/groups", token=admin, method="GET")
+    assert set(GROUPS).issubset({group["name"] for group in groups})

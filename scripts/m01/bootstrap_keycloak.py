@@ -7,6 +7,9 @@ import urllib.request
 
 ORIGIN = os.environ.get("EPI_KEYCLOAK_ORIGIN", "http://127.0.0.1:8180")
 APPS = ("policy-administration", "payments-hub", "banking-simulator", "payroll-simulator")
+GROUPS = ("policy-administration", "payments-operations", "reconciliation-operations", "finance-operations",
+          "payment-approval", "audit-read-only", "banking-simulation", "payroll-simulation",
+          "integration-services", "platform-administration")
 
 
 def request(path: str, data: dict | None = None, token: str = "", method: str = "POST", form: bool = False):
@@ -40,6 +43,8 @@ def bootstrap() -> None:
     request("/admin/realms", {"realm": "epi", "enabled": True, "accessTokenLifespan": 300,
                               "sslRequired": "none"}, admin)
     request(root + "/roles", {"name": "foundation-reader"}, admin)
+    for group in GROUPS:
+        request(root + "/groups", {"name": group}, admin)
     request(root + "/client-scopes", {"name": "foundation.read", "protocol": "openid-connect",
                                         "attributes": {"include.in.token.scope": "true"}}, admin)
     scopes = request(root + "/client-scopes", token=admin, method="GET")
