@@ -70,6 +70,7 @@ services:
     depends_on:
       database-setup: { condition: service_completed_successfully }
       identity-setup: { condition: service_completed_successfully }
+      rabbitmq-setup: { condition: service_completed_successfully }
     ports:
       - "127.0.0.1:8001:8000"
     healthcheck:
@@ -101,6 +102,7 @@ services:
     depends_on:
       database-setup: { condition: service_completed_successfully }
       identity-setup: { condition: service_completed_successfully }
+      rabbitmq-setup: { condition: service_completed_successfully }
     ports:
       - "127.0.0.1:8002:8000"
     healthcheck:
@@ -132,6 +134,7 @@ services:
     depends_on:
       database-setup: { condition: service_completed_successfully }
       identity-setup: { condition: service_completed_successfully }
+      rabbitmq-setup: { condition: service_completed_successfully }
     ports:
       - "127.0.0.1:8003:8000"
     healthcheck:
@@ -163,6 +166,7 @@ services:
     depends_on:
       database-setup: { condition: service_completed_successfully }
       identity-setup: { condition: service_completed_successfully }
+      rabbitmq-setup: { condition: service_completed_successfully }
     ports:
       - "127.0.0.1:8004:8000"
     healthcheck:
@@ -182,7 +186,6 @@ services:
     ports:
       - "127.0.0.1:5176:8080"
   rabbitmq:
-    profiles: [messaging]
     image: rabbitmq:4.1-management
     environment:
       RABBITMQ_DEFAULT_USER: ${EPI_RABBIT_ADMIN:?generate local credentials}
@@ -198,7 +201,6 @@ services:
       timeout: 5s
       retries: 18
   rabbitmq-setup:
-    profiles: [messaging]
     build:
       context: .
       dockerfile: infrastructure/docker/backend.Dockerfile

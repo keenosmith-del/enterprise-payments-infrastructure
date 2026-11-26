@@ -191,7 +191,8 @@ jobs:
           python -m pytest tests/integration/test_stack_authorization.py -v
           npx playwright test tests/browser --workers=1
           scripts/m01/create_sftp_keys.sh
-          docker compose --env-file .local/epi.env --profile messaging --profile sftp --profile observability up -d --build --wait rabbitmq rabbitmq-setup sftp prometheus grafana
+          docker compose --env-file .local/epi.env --profile messaging --profile sftp --profile observability up -d --build --wait rabbitmq sftp prometheus grafana
+          docker compose --env-file .local/epi.env run --rm rabbitmq-setup
           python -m pytest tests/integration/test_rabbit_permissions.py -v
           for attempt in $(seq 1 10); do
             if scripts/m01/probe_dev_sftp.sh; then break; fi
