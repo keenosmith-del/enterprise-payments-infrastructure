@@ -58,7 +58,8 @@ def bootstrap() -> None:
         ]
         request(root + "/clients", {"clientId": app, "enabled": True, "publicClient": True,
                  "standardFlowEnabled": True, "directAccessGrantsEnabled": True,
-                 "attributes": {"pkce.code.challenge.method": "S256"},
+                 "attributes": {"pkce.code.challenge.method": "S256",
+                                "post.logout.redirect.uris": f"http://127.0.0.1:{port}/*"},
                  "redirectUris": [f"http://127.0.0.1:{port}/*"], "webOrigins": [f"http://127.0.0.1:{port}"],
                  "protocolMappers": mappers}, admin)
         clients = request(root + "/clients?" + urllib.parse.urlencode({"clientId": app}), token=admin, method="GET")

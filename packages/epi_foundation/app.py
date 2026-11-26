@@ -111,6 +111,10 @@ def create_app(name: str, settings: Settings | None = None) -> FastAPI:
             raise HTTPException(status_code=503, detail="Identity unavailable")
         return verifier.verify(credentials.credentials)
 
+    @app.get("/me")
+    def me(principal: Principal = Depends(authenticated)) -> dict[str, object]:
+        return {"kind": principal.kind, "tenant_ids": sorted(str(value) for value in principal.tenants)}
+
     @app.get("/tenants/{tenant_id}/legal-entities")
     def legal_entities(tenant_id: UUID, principal: Principal = Depends(authenticated)) -> dict[str, object]:
         if principal.kind != "human" or "foundation-reader" not in principal.roles or "foundation.read" not in principal.scopes:

@@ -1,9 +1,15 @@
 {
   "name": "epi-foundation",
   "private": true,
-  "workspaces": ["apps/*/frontend", "packages/ui-components"],
+  "workspaces": [
+    "apps/*/frontend",
+    "packages/ui-components"
+  ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1"
   }
 }

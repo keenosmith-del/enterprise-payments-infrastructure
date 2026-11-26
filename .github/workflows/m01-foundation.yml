@@ -161,6 +161,14 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.14'
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24'
+      - run: python -m pip install --require-hashes -r requirements.lock
+      - run: npm ci && npx playwright install --with-deps chromium
       - name: Build and start development stack
         run: |
           make bootstrap
@@ -170,6 +178,12 @@ jobs:
             curl -fsS "http://127.0.0.1:$port/api/info" > /dev/null
             curl -fsS "http://127.0.0.1:$port/api/health/ready" > /dev/null
           done
+          set -a
+          source .local/epi.env
+          set +a
+          echo "::add-mask::$EPI_KEYCLOAK_USER_PASSWORD"
+          python -m pytest tests/integration/test_stack_authorization.py -v
+          npx playwright test tests/browser --workers=1
           docker compose --env-file .local/epi.env restart postgres
           docker compose --env-file .local/epi.env up -d --wait
           for port in 8001 8002 8003 8004; do
