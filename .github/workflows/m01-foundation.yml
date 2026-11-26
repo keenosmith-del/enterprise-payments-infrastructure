@@ -175,11 +175,16 @@ jobs:
       - run: npm ci && npx playwright install --with-deps chromium
       - name: Build and start development stack
         run: |
+          uname -a
           make bootstrap
           while IFS='=' read -r name value; do
             if [[ "$name" == *_PASSWORD || "$name" == *_SECRET ]]; then echo "::add-mask::$value"; fi
           done < .local/epi.env
           make up
+          for app in policy-administration payments-hub banking-simulator payroll-simulator; do
+            test "$(docker compose --env-file .local/epi.env exec -T "$app-backend" id -u)" != 0
+            test "$(docker compose --env-file .local/epi.env exec -T "$app-frontend" id -u)" != 0
+          done
           for port in 5173 5174 5175 5176; do
             curl -fsS "http://127.0.0.1:$port/" > /dev/null
             curl -fsS "http://127.0.0.1:$port/api/info" > /dev/null

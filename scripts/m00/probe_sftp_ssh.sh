@@ -65,6 +65,12 @@ if printf 'pwd\n' | sftp -q -F /dev/null -o BatchMode=yes -o IdentitiesOnly=yes 
 fi
 
 printf 'pwd\n' | transfer partner_b partner_b
+if ssh -F /dev/null -o BatchMode=yes -o IdentitiesOnly=yes -o ConnectTimeout=5 \
+    -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$scratch/known_hosts" \
+    -i "$scratch/partner_a" -p "$port" partner_a@127.0.0.1 'id' >/dev/null 2>&1; then
+    echo "Interactive shell command was accepted" >&2
+    exit 1
+fi
 if printf 'pwd\n' | transfer partner_a partner_b; then
     echo "Invalid partner key was accepted" >&2
     exit 1
