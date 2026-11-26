@@ -50,6 +50,7 @@ services:
       EPI_KEYCLOAK_ADMIN: ${EPI_KEYCLOAK_ADMIN:?generate local credentials}
       EPI_KEYCLOAK_ADMIN_PASSWORD: ${EPI_KEYCLOAK_ADMIN_PASSWORD:?generate local credentials}
       EPI_KEYCLOAK_USER_PASSWORD: ${EPI_KEYCLOAK_USER_PASSWORD:?generate local credentials}
+      EPI_KEYCLOAK_SERVICE_SECRET: ${EPI_KEYCLOAK_SERVICE_SECRET:?generate local credentials}
     depends_on:
       keycloak: { condition: service_started }
     restart: on-failure:10

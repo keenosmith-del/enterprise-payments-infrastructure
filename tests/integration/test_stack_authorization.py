@@ -5,7 +5,7 @@ import urllib.error
 import urllib.request
 
 import pytest
-from scripts.m01.bootstrap_keycloak import token
+from scripts.m01.bootstrap_keycloak import request, token
 
 APPS = (("policy-administration", 8001), ("payments-hub", 8002),
         ("banking-simulator", 8003), ("payroll-simulator", 8004))
@@ -34,3 +34,10 @@ def test_authenticated_tenant_boundary(app, port):
     assert get(port, f"/tenants/{TENANT_B}/legal-entities", access)[0] == 403
     wrong = token("synthetic-user", os.environ["EPI_KEYCLOAK_USER_PASSWORD"], ("payments-hub" if app != "payments-hub" else "policy-administration"), "epi")
     assert get(port, f"/tenants/{TENANT_A}/legal-entities", wrong)[0] == 401
+
+
+def test_service_identity_cannot_impersonate_human():
+    service = request("/realms/epi/protocol/openid-connect/token", {
+        "grant_type": "client_credentials", "client_id": "integration-service",
+        "client_secret": os.environ["EPI_KEYCLOAK_SERVICE_SECRET"]}, form=True)["access_token"]
+    assert get(8002, f"/tenants/{TENANT_A}/legal-entities", service)[0] == 403

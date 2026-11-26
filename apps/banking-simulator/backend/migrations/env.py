@@ -22,6 +22,6 @@ else:
         connection.execute(text("CREATE OR REPLACE VIEW foundation_schema_revision AS SELECT version_num FROM alembic_version"))
         connection.execute(text("GRANT SELECT ON foundation_schema_revision TO banking_simulator_runtime"))
         # Grant only application records, never Alembic's administration table.
-        connection.execute(text("GRANT SELECT, INSERT, UPDATE, DELETE ON tenant, legal_entity TO banking_simulator_runtime"))
+        connection.execute(text("GRANT SELECT, INSERT, UPDATE, DELETE ON tenant, legal_entity, foundation_principal, application_config TO banking_simulator_runtime"))
         connection.commit()
     engine.dispose()

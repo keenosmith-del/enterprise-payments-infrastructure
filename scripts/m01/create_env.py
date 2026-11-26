@@ -8,7 +8,7 @@ path = Path(".local/epi.env")
 path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
 values = {"EPI_POSTGRES_ADMIN_PASSWORD": secrets.token_hex(24),
           "EPI_KEYCLOAK_ADMIN": "epi_admin", "EPI_KEYCLOAK_ADMIN_PASSWORD": secrets.token_hex(24),
-          "EPI_KEYCLOAK_USER_PASSWORD": secrets.token_hex(24), "EPI_RABBIT_ADMIN": "epi_admin",
+          "EPI_KEYCLOAK_USER_PASSWORD": secrets.token_hex(24), "EPI_KEYCLOAK_SERVICE_SECRET": secrets.token_hex(24), "EPI_RABBIT_ADMIN": "epi_admin",
           "EPI_RABBIT_ADMIN_PASSWORD": secrets.token_hex(24), "EPI_GRAFANA_PASSWORD": secrets.token_hex(24)}
 for app in APPS:
     for role in ("MIGRATION", "RUNTIME"):
@@ -18,7 +18,14 @@ values["EPI_RABBIT_INTEGRATION_PASSWORD"] = secrets.token_hex(24)
 try:
     fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
 except FileExistsError:
-    print(f"Keeping existing {path}; remove it explicitly to regenerate credentials.")
+    existing = {line.split("=", 1)[0] for line in path.read_text().splitlines() if "=" in line}
+    missing = {key: value for key, value in values.items() if key not in existing}
+    if missing:
+        with path.open("a") as output:
+            output.writelines(f"{key}={value}\n" for key, value in missing.items())
+        print(f"Added {len(missing)} missing development credentials to {path}.")
+    else:
+        print(f"Keeping existing {path}.")
 else:
     with os.fdopen(fd, "w") as output:
         output.writelines(f"{key}={value}\n" for key, value in values.items())

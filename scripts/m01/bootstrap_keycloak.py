@@ -64,6 +64,15 @@ def bootstrap() -> None:
                  "protocolMappers": mappers}, admin)
         clients = request(root + "/clients?" + urllib.parse.urlencode({"clientId": app}), token=admin, method="GET")
         request(root + f"/clients/{clients[0]['id']}/default-client-scopes/{scope_id}", {}, admin, method="PUT")
+    service_mappers = [
+        {"name": "audience", "protocol": "openid-connect", "protocolMapper": "oidc-audience-mapper",
+         "config": {"included.custom.audience": "payments-hub", "access.token.claim": "true"}},
+        {"name": "principal-kind", "protocol": "openid-connect", "protocolMapper": "oidc-hardcoded-claim-mapper",
+         "config": {"claim.name": "principal_kind", "claim.value": "service", "jsonType.label": "String", "access.token.claim": "true"}},
+    ]
+    request(root + "/clients", {"clientId": "integration-service", "enabled": True, "publicClient": False,
+            "serviceAccountsEnabled": True, "standardFlowEnabled": False, "directAccessGrantsEnabled": False,
+            "secret": os.environ["EPI_KEYCLOAK_SERVICE_SECRET"], "protocolMappers": service_mappers}, admin)
     profile = request(root + "/users/profile", token=admin, method="GET")
     if not any(attribute.get("name") == "tenant_ids" for attribute in profile["attributes"]):
         profile["attributes"].append({"name": "tenant_ids", "displayName": "Tenant scope",

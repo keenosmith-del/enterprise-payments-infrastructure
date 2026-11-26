@@ -38,12 +38,15 @@ def test_bootstrap_migrate_seed_and_role_isolation() -> None:
         with psycopg.connect(runtime) as conn:
             assert conn.execute("SELECT count(*) FROM tenant").fetchone()[0] == 2
             assert conn.execute("SELECT count(*) FROM legal_entity").fetchone()[0] == 2
-            assert conn.execute("SELECT version_num FROM foundation_schema_revision").fetchone()[0] == "m01_initial"
+            assert conn.execute("SELECT count(*) FROM foundation_principal").fetchone()[0] == 3
+            assert conn.execute("SELECT count(*) FROM application_config").fetchone()[0] == 2
+            assert conn.execute("SELECT version_num FROM foundation_schema_revision").fetchone()[0] == "m01_principals"
             with pytest.raises(psycopg.errors.InsufficientPrivilege):
                 conn.execute("SELECT * FROM alembic_version")
-        with psycopg.connect(runtime) as conn:
-            with pytest.raises(psycopg.errors.InsufficientPrivilege):
-                conn.execute("CREATE TABLE prohibited (id integer)")
+        for statement in ("CREATE TABLE prohibited (id integer)", "CREATE ROLE prohibited", "CREATE DATABASE prohibited", f"SET ROLE {app}_owner"):
+            with psycopg.connect(runtime, autocommit=True) as conn:
+                with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                    conn.execute(statement)
         with psycopg.connect(runtime) as conn:
             with pytest.raises(psycopg.errors.ForeignKeyViolation):
                 conn.execute("INSERT INTO legal_entity (id, tenant_id, name) VALUES (%s, %s, %s)",
@@ -55,6 +58,6 @@ def test_bootstrap_migrate_seed_and_role_isolation() -> None:
         with psycopg.connect(migration) as conn:
             assert conn.execute("SELECT tableowner FROM pg_tables WHERE schemaname='public' AND tablename='tenant'").fetchone()[0] == f"{app}_owner"
         for kind in ("runtime", "migration"):
-            for other in (*[x for x in APPS if x != app], "postgres"):
+            for other in (*[x for x in APPS if x != app], "postgres", "template1"):
                 with pytest.raises(psycopg.OperationalError):
                     psycopg.connect(connection(app, kind, other), connect_timeout=3)

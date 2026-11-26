@@ -23,7 +23,7 @@ def test_repeatable_migration_and_readiness(app: str) -> None:
     engine = create_engine(url)
     try:
         with engine.connect() as conn:
-            assert conn.execute(text("select version_num from alembic_version")).scalar_one() == "m01_initial"
+            assert conn.execute(text("select version_num from alembic_version")).scalar_one() == "m01_principals"
             assert conn.execute(text("select count(*) from tenant")).scalar_one() == 0
     finally:
         engine.dispose()
