@@ -13,7 +13,7 @@ def connect(user: str):
         credentials=pika.PlainCredentials(user, os.environ[f"EPI_RABBIT_{user.upper()}_PASSWORD"])))
 
 
-def test_authorised_transport_and_denied_access():
+def test_authorised_transport():
     with connect("payments_hub") as connection:
         channel = connection.channel()
         channel.confirm_delivery()
@@ -21,13 +21,21 @@ def test_authorised_transport_and_denied_access():
     result = subprocess.run([sys.executable, "services/enterprise-integration/technical_probe.py"],
                             check=True, capture_output=True, text=True)
     assert result.stdout.strip() == "synthetic-technical-probe"
-    with connect("policy_administration") as connection:
+
+
+@pytest.mark.parametrize("user", ["policy_administration", "banking_simulator", "payroll_simulator", "integration"])
+def test_unauthorised_publish_denied(user):
+    with connect(user) as connection:
         channel = connection.channel()
         channel.confirm_delivery()
         with pytest.raises(pika.exceptions.ChannelClosedByBroker) as error:
             channel.basic_publish("epi.technical", "probe", b"unauthorised", mandatory=True)
         assert error.value.reply_code == 403
-    with connect("banking_simulator") as connection:
+
+
+@pytest.mark.parametrize("user", ["policy_administration", "payments_hub", "banking_simulator", "payroll_simulator"])
+def test_unauthorised_consume_denied(user):
+    with connect(user) as connection:
         with pytest.raises(pika.exceptions.ChannelClosedByBroker) as error:
             connection.channel().basic_get("epi.integration")
         assert error.value.reply_code == 403
