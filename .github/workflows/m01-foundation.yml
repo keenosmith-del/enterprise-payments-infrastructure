@@ -202,9 +202,13 @@ jobs:
           docker compose --env-file .local/epi.env --profile messaging --profile sftp --profile observability up -d --build --wait rabbitmq sftp prometheus grafana
           docker compose --env-file .local/epi.env run --rm rabbitmq-setup
           python -m pytest tests/integration/test_rabbit_permissions.py -v
+          docker compose --env-file .local/epi.env --profile integration build enterprise-integration
           python scripts/m01/publish_probe.py
           message="$(docker compose --env-file .local/epi.env --profile integration run --rm -T --no-deps enterprise-integration | tr -d '\r')"
-          test "$message" = synthetic-technical-probe
+          if [[ "$message" != synthetic-technical-probe ]]; then
+            printf 'Unexpected technical probe output: %q\n' "$message" >&2
+            exit 1
+          fi
           for attempt in $(seq 1 10); do
             if scripts/m01/probe_dev_sftp.sh; then break; fi
             if [[ "$attempt" == 10 ]]; then exit 1; fi
