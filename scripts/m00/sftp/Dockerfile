@@ -7,4 +7,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends openssh-server 
     && install -d -m 0700 -o partner_a -g partner_a /srv/sftp/partner_a/inbox \
     && install -d -m 0700 -o partner_b -g partner_b /srv/sftp/partner_b/inbox
 COPY sshd_config /etc/ssh/epi_probe_config
-CMD ["/usr/sbin/sshd", "-D", "-e", "-f", "/etc/ssh/epi_probe_config"]
+COPY entrypoint.sh /usr/local/bin/epi-probe-entrypoint
+RUN chmod 0755 /usr/local/bin/epi-probe-entrypoint
+CMD ["/usr/local/bin/epi-probe-entrypoint"]

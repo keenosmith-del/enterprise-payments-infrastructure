@@ -25,7 +25,7 @@ chmod 0644 "$scratch/server/"*.pub
 
 docker build -t "$image" scripts/m00/sftp
 container="$(docker run -d -p 127.0.0.1::22 \
-    --mount "type=bind,source=$scratch/server,target=/probe-keys,readonly" "$image")"
+    --mount "type=bind,source=$scratch/server,target=/probe-keys-input,readonly" "$image")"
 port_mapping="$(docker port "$container" 22/tcp)"
 port="${port_mapping##*:}"
 printf '[127.0.0.1]:%s %s\n' "$port" "$(cut -d ' ' -f 1,2 "$scratch/server/host.pub")" \
