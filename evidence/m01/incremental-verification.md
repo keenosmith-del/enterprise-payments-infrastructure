@@ -1,0 +1,3 @@
+# M01 intermediate verification
+
+26 November 2026. Local host: macOS arm64, Python 3.14.5 and Node 24.14.1. Starting commit `c51eca343fbbb0dbdee0833f230f41554a1b220d` matched remote main. `python3 scripts/validate_baseline.py` exited 0. `.venv/bin/python -m pytest tests/unit -q` ran 3 tests, all passed. `.venv/bin/ruff check packages tests/unit` and `.venv/bin/mypy packages/epi_foundation tests/unit` exited 0. `npm run typecheck` and `npm run build` exited 0 for all four frontends using Node 24. `npm audit` reported zero vulnerabilities after upgrading Vite. The local SFTP and container integration checks were not run because Docker daemon access was unavailable. These checks do not constitute M01 acceptance.

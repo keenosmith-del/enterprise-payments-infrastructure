@@ -1,0 +1,1 @@
+{"name":"@epi/ui-components","version":"0.0.1","private":true,"type":"module","exports":"./src.tsx","peerDependencies":{"react":"18.3.1"}}
