@@ -1,0 +1,12 @@
+services:
+  sftp:
+    build:
+      context: ../../scripts/m00/sftp
+    ports:
+      - "127.0.0.1:${EPI_SFTP_PORT:-2222}:22"
+    volumes:
+      - type: bind
+        source: ../../.local/sftp/input
+        target: /probe-keys-input
+        read_only: true
+    restart: unless-stopped

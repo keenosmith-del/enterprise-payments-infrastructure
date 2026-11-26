@@ -54,6 +54,16 @@ printf 'put %s/source.csv /inbox/source.part\nrename /inbox/source.part /inbox/s
     "$scratch" "$scratch" | transfer partner_a partner_a
 cmp "$scratch/source.csv" "$scratch/result.csv"
 
+# A wrong pinned host key must be rejected even with a valid partner key.
+ssh-keygen -q -N '' -t ed25519 -f "$scratch/untrusted_host"
+printf '[127.0.0.1]:%s %s\n' "$port" "$(cut -d ' ' -f 1,2 "$scratch/untrusted_host.pub")" > "$scratch/untrusted_hosts"
+if printf 'pwd\n' | sftp -q -F /dev/null -o BatchMode=yes -o IdentitiesOnly=yes \
+    -o ConnectTimeout=5 -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$scratch/untrusted_hosts" \
+    -i "$scratch/partner_a" -P "$port" -b - "partner_a@127.0.0.1"; then
+    echo "Untrusted host key was accepted" >&2
+    exit 1
+fi
+
 printf 'pwd\n' | transfer partner_b partner_b
 if printf 'pwd\n' | transfer partner_a partner_b; then
     echo "Invalid partner key was accepted" >&2
