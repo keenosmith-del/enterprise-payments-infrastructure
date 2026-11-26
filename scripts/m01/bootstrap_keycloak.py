@@ -63,6 +63,11 @@ def bootstrap() -> None:
                  "protocolMappers": mappers}, admin)
         clients = request(root + "/clients?" + urllib.parse.urlencode({"clientId": app}), token=admin, method="GET")
         request(root + f"/clients/{clients[0]['id']}/default-client-scopes/{scope_id}", {}, admin, method="PUT")
+    profile = request(root + "/users/profile", token=admin, method="GET")
+    if not any(attribute.get("name") == "tenant_ids" for attribute in profile["attributes"]):
+        profile["attributes"].append({"name": "tenant_ids", "displayName": "Tenant scope",
+                                      "multivalued": True, "permissions": {"view": ["admin"], "edit": ["admin"]}})
+        request(root + "/users/profile", profile, admin, method="PUT")
     request(root + "/users", {"username": "synthetic-user", "enabled": True, "emailVerified": True,
             "firstName": "Synthetic", "lastName": "User", "email": "synthetic@example.invalid",
             "attributes": {"tenant_ids": ["10000000-0000-4000-8000-000000000001"]},

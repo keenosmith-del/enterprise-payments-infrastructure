@@ -1,0 +1,181 @@
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_PASSWORD: ${EPI_POSTGRES_ADMIN_PASSWORD:?generate local credentials}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:55432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+  database-setup:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/backend.Dockerfile
+      args: { APP_NAME: payments-hub }
+    command: ["python", "scripts/m01/prepare_databases.py"]
+    environment:
+      EPI_BOOTSTRAP_DSN: "host=postgres port=5432 dbname=postgres user=postgres password=${EPI_POSTGRES_ADMIN_PASSWORD:?generate local credentials}"
+      EPI_POLICY_ADMINISTRATION_MIGRATION_PASSWORD: ${EPI_POLICY_ADMINISTRATION_MIGRATION_PASSWORD:?generate local credentials}
+      EPI_POLICY_ADMINISTRATION_RUNTIME_PASSWORD: ${EPI_POLICY_ADMINISTRATION_RUNTIME_PASSWORD:?generate local credentials}
+      EPI_PAYMENTS_HUB_MIGRATION_PASSWORD: ${EPI_PAYMENTS_HUB_MIGRATION_PASSWORD:?generate local credentials}
+      EPI_PAYMENTS_HUB_RUNTIME_PASSWORD: ${EPI_PAYMENTS_HUB_RUNTIME_PASSWORD:?generate local credentials}
+      EPI_BANKING_SIMULATOR_MIGRATION_PASSWORD: ${EPI_BANKING_SIMULATOR_MIGRATION_PASSWORD:?generate local credentials}
+      EPI_BANKING_SIMULATOR_RUNTIME_PASSWORD: ${EPI_BANKING_SIMULATOR_RUNTIME_PASSWORD:?generate local credentials}
+      EPI_PAYROLL_SIMULATOR_MIGRATION_PASSWORD: ${EPI_PAYROLL_SIMULATOR_MIGRATION_PASSWORD:?generate local credentials}
+      EPI_PAYROLL_SIMULATOR_RUNTIME_PASSWORD: ${EPI_PAYROLL_SIMULATOR_RUNTIME_PASSWORD:?generate local credentials}
+    depends_on:
+      postgres: { condition: service_healthy }
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.3.5
+    command: ["start-dev"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${EPI_KEYCLOAK_ADMIN:?generate local credentials}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${EPI_KEYCLOAK_ADMIN_PASSWORD:?generate local credentials}
+      KC_HOSTNAME: http://127.0.0.1:8180
+    ports:
+      - "127.0.0.1:8180:8080"
+  identity-setup:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/backend.Dockerfile
+      args: { APP_NAME: payments-hub }
+    command: ["sh", "-c", "python scripts/m01/wait_for_keycloak.py && python scripts/m01/bootstrap_keycloak.py"]
+    environment:
+      EPI_KEYCLOAK_ORIGIN: http://keycloak:8080
+      EPI_KEYCLOAK_ADMIN: ${EPI_KEYCLOAK_ADMIN:?generate local credentials}
+      EPI_KEYCLOAK_ADMIN_PASSWORD: ${EPI_KEYCLOAK_ADMIN_PASSWORD:?generate local credentials}
+      EPI_KEYCLOAK_USER_PASSWORD: ${EPI_KEYCLOAK_USER_PASSWORD:?generate local credentials}
+    depends_on:
+      keycloak: { condition: service_started }
+    restart: on-failure:10
+  policy-administration-backend:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/backend.Dockerfile
+      args: { APP_NAME: policy-administration }
+    environment:
+      EPI_DATABASE_URL: postgresql+psycopg://policy_administration_runtime:${EPI_POLICY_ADMINISTRATION_RUNTIME_PASSWORD:?generate local credentials}@postgres:5432/policy_administration
+      EPI_OIDC_ISSUER: http://127.0.0.1:8180/realms/epi
+      EPI_OIDC_AUDIENCE: policy-administration
+      EPI_OIDC_JWKS_URL: http://keycloak:8080/realms/epi/protocol/openid-connect/certs
+    depends_on:
+      database-setup: { condition: service_completed_successfully }
+      identity-setup: { condition: service_completed_successfully }
+    ports:
+      - "127.0.0.1:8001:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/ready', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+  policy-administration-frontend:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/frontend.Dockerfile
+      args: { APP_NAME: policy-administration }
+    environment:
+      EPI_BACKEND_HOST: policy-administration-backend
+    depends_on:
+      policy-administration-backend: { condition: service_healthy }
+    ports:
+      - "127.0.0.1:5173:8080"
+  payments-hub-backend:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/backend.Dockerfile
+      args: { APP_NAME: payments-hub }
+    environment:
+      EPI_DATABASE_URL: postgresql+psycopg://payments_hub_runtime:${EPI_PAYMENTS_HUB_RUNTIME_PASSWORD:?generate local credentials}@postgres:5432/payments_hub
+      EPI_OIDC_ISSUER: http://127.0.0.1:8180/realms/epi
+      EPI_OIDC_AUDIENCE: payments-hub
+      EPI_OIDC_JWKS_URL: http://keycloak:8080/realms/epi/protocol/openid-connect/certs
+    depends_on:
+      database-setup: { condition: service_completed_successfully }
+      identity-setup: { condition: service_completed_successfully }
+    ports:
+      - "127.0.0.1:8002:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/ready', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+  payments-hub-frontend:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/frontend.Dockerfile
+      args: { APP_NAME: payments-hub }
+    environment:
+      EPI_BACKEND_HOST: payments-hub-backend
+    depends_on:
+      payments-hub-backend: { condition: service_healthy }
+    ports:
+      - "127.0.0.1:5174:8080"
+  banking-simulator-backend:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/backend.Dockerfile
+      args: { APP_NAME: banking-simulator }
+    environment:
+      EPI_DATABASE_URL: postgresql+psycopg://banking_simulator_runtime:${EPI_BANKING_SIMULATOR_RUNTIME_PASSWORD:?generate local credentials}@postgres:5432/banking_simulator
+      EPI_OIDC_ISSUER: http://127.0.0.1:8180/realms/epi
+      EPI_OIDC_AUDIENCE: banking-simulator
+      EPI_OIDC_JWKS_URL: http://keycloak:8080/realms/epi/protocol/openid-connect/certs
+    depends_on:
+      database-setup: { condition: service_completed_successfully }
+      identity-setup: { condition: service_completed_successfully }
+    ports:
+      - "127.0.0.1:8003:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/ready', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+  banking-simulator-frontend:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/frontend.Dockerfile
+      args: { APP_NAME: banking-simulator }
+    environment:
+      EPI_BACKEND_HOST: banking-simulator-backend
+    depends_on:
+      banking-simulator-backend: { condition: service_healthy }
+    ports:
+      - "127.0.0.1:5175:8080"
+  payroll-simulator-backend:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/backend.Dockerfile
+      args: { APP_NAME: payroll-simulator }
+    environment:
+      EPI_DATABASE_URL: postgresql+psycopg://payroll_simulator_runtime:${EPI_PAYROLL_SIMULATOR_RUNTIME_PASSWORD:?generate local credentials}@postgres:5432/payroll_simulator
+      EPI_OIDC_ISSUER: http://127.0.0.1:8180/realms/epi
+      EPI_OIDC_AUDIENCE: payroll-simulator
+      EPI_OIDC_JWKS_URL: http://keycloak:8080/realms/epi/protocol/openid-connect/certs
+    depends_on:
+      database-setup: { condition: service_completed_successfully }
+      identity-setup: { condition: service_completed_successfully }
+    ports:
+      - "127.0.0.1:8004:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/ready', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+  payroll-simulator-frontend:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/frontend.Dockerfile
+      args: { APP_NAME: payroll-simulator }
+    environment:
+      EPI_BACKEND_HOST: payroll-simulator-backend
+    depends_on:
+      payroll-simulator-backend: { condition: service_healthy }
+    ports:
+      - "127.0.0.1:5176:8080"
+volumes:
+  postgres_data:

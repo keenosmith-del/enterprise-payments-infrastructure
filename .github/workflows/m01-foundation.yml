@@ -154,3 +154,30 @@ jobs:
       - name: Clean up
         if: always()
         run: docker rm -f epi-m01-identity-keycloak-1 || true
+  compose-foundation:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Build and start development stack
+        run: |
+          make bootstrap
+          make up
+          for port in 5173 5174 5175 5176; do
+            curl -fsS "http://127.0.0.1:$port/" > /dev/null
+            curl -fsS "http://127.0.0.1:$port/api/info" > /dev/null
+            curl -fsS "http://127.0.0.1:$port/api/health/ready" > /dev/null
+          done
+          docker compose --env-file .local/epi.env restart postgres
+          docker compose --env-file .local/epi.env up -d --wait
+          for port in 8001 8002 8003 8004; do
+            curl --retry 15 --retry-delay 2 --retry-all-errors -fsS "http://127.0.0.1:$port/health/ready" > /dev/null
+          done
+      - name: Cleanup
+        if: always()
+        run: |
+          if [[ -f .local/epi.env ]]; then
+            docker compose --env-file .local/epi.env down -v
+          fi
