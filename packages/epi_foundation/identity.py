@@ -13,6 +13,7 @@ class Principal:
     subject: str
     kind: str
     tenants: frozenset[UUID]
+    legal_entities: frozenset[UUID]
     roles: frozenset[str]
     scopes: frozenset[str]
 
@@ -29,9 +30,10 @@ class OIDCVerifier:
             claims = jwt.decode(token, key, algorithms=["RS256"], issuer=self.issuer,
                                 audience=self.audience, options={"require": ["iss", "aud", "exp", "sub", "iat"]})
             tenant_values = claims.get("tenant_ids", [])
+            entity_values = claims.get("legal_entity_ids", [])
             realm = claims.get("realm_access", {})
             kind = claims.get("principal_kind")
-            if not isinstance(tenant_values, list) or not isinstance(realm, dict):
+            if not isinstance(tenant_values, list) or not isinstance(entity_values, list) or not isinstance(realm, dict):
                 raise ValueError("invalid identity claims")
             roles = realm.get("roles", [])
             scopes = claims.get("scope", "")
@@ -40,6 +42,6 @@ class OIDCVerifier:
             if not all(isinstance(role, str) for role in roles):
                 raise ValueError("invalid roles")
             return Principal(str(claims["sub"]), kind, frozenset(UUID(t) for t in tenant_values),
-                             frozenset(roles), frozenset(scopes.split()))
+                             frozenset(UUID(entity) for entity in entity_values), frozenset(roles), frozenset(scopes.split()))
         except (PyJWTError, PyJWKClientError, ValueError, TypeError, KeyError):
             raise HTTPException(status_code=401, detail="Invalid credentials") from None

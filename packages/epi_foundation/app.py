@@ -157,20 +157,21 @@ def create_app(name: str, settings: Settings | None = None) -> FastAPI:
 
     @app.get("/me")
     def me(principal: Principal = Depends(authenticated)) -> dict[str, object]:
-        return {"kind": principal.kind, "tenant_ids": sorted(str(value) for value in principal.tenants)}
+        return {"kind": principal.kind, "tenant_ids": sorted(str(value) for value in principal.tenants),
+                "legal_entity_ids": sorted(str(value) for value in principal.legal_entities)}
 
     @app.get("/tenants/{tenant_id}/legal-entities")
     def legal_entities(tenant_id: UUID, principal: Principal = Depends(authenticated)) -> dict[str, object]:
         if principal.kind != "human" or "foundation-reader" not in principal.roles or "foundation.read" not in principal.scopes:
             raise HTTPException(status_code=403, detail="Forbidden")
-        if tenant_id not in principal.tenants:
+        if tenant_id not in principal.tenants or not principal.legal_entities:
             raise HTTPException(status_code=403, detail="Forbidden")
         if engine is None:
             raise HTTPException(status_code=503, detail="Database unavailable")
         try:
             with engine.connect() as conn:
-                rows = conn.execute(text("SELECT id, name FROM legal_entity WHERE tenant_id = :tenant_id ORDER BY id"),
-                                    {"tenant_id": tenant_id}).all()
+                rows = conn.execute(text("SELECT id, name FROM legal_entity WHERE tenant_id = :tenant_id AND id = ANY(:entity_ids) ORDER BY id"),
+                                    {"tenant_id": tenant_id, "entity_ids": list(principal.legal_entities)}).all()
                 return {"items": [{"id": str(row.id), "name": row.name} for row in rows]}
         except SQLAlchemyError:
             raise HTTPException(status_code=503, detail="Database unavailable") from None

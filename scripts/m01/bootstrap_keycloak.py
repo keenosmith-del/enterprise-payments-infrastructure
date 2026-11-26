@@ -53,6 +53,9 @@ def bootstrap() -> None:
             {"name": "tenant-ids", "protocol": "openid-connect", "protocolMapper": "oidc-usermodel-attribute-mapper",
              "config": {"user.attribute": "tenant_ids", "claim.name": "tenant_ids", "jsonType.label": "String",
                         "multivalued": "true", "access.token.claim": "true"}},
+            {"name": "entity-ids", "protocol": "openid-connect", "protocolMapper": "oidc-usermodel-attribute-mapper",
+             "config": {"user.attribute": "legal_entity_ids", "claim.name": "legal_entity_ids", "jsonType.label": "String",
+                        "multivalued": "true", "access.token.claim": "true"}},
             {"name": "principal-kind", "protocol": "openid-connect", "protocolMapper": "oidc-hardcoded-claim-mapper",
              "config": {"claim.name": "principal_kind", "claim.value": "human", "jsonType.label": "String", "access.token.claim": "true"}},
         ]
@@ -63,7 +66,12 @@ def bootstrap() -> None:
                  "redirectUris": [f"http://127.0.0.1:{port}/*"], "webOrigins": [f"http://127.0.0.1:{port}"],
                  "protocolMappers": mappers}, admin)
         clients = request(root + "/clients?" + urllib.parse.urlencode({"clientId": app}), token=admin, method="GET")
-        request(root + f"/clients/{clients[0]['id']}/default-client-scopes/{scope_id}", {}, admin, method="PUT")
+        client_id = clients[0]["id"]
+        existing_mappers = request(root + f"/clients/{client_id}/protocol-mappers/models", token=admin, method="GET")
+        for mapper in mappers:
+            if not any(existing.get("name") == mapper["name"] for existing in existing_mappers):
+                request(root + f"/clients/{client_id}/protocol-mappers/models", mapper, admin)
+        request(root + f"/clients/{client_id}/default-client-scopes/{scope_id}", {}, admin, method="PUT")
     service_mappers = [
         {"name": "audience", "protocol": "openid-connect", "protocolMapper": "oidc-audience-mapper",
          "config": {"included.custom.audience": "payments-hub", "access.token.claim": "true"}},
@@ -74,19 +82,33 @@ def bootstrap() -> None:
             "serviceAccountsEnabled": True, "standardFlowEnabled": False, "directAccessGrantsEnabled": False,
             "secret": os.environ["EPI_KEYCLOAK_SERVICE_SECRET"], "protocolMappers": service_mappers}, admin)
     profile = request(root + "/users/profile", token=admin, method="GET")
-    if not any(attribute.get("name") == "tenant_ids" for attribute in profile["attributes"]):
-        profile["attributes"].append({"name": "tenant_ids", "displayName": "Tenant scope",
-                                      "multivalued": True, "permissions": {"view": ["admin"], "edit": ["admin"]}})
+    changed = False
+    for attribute_name in ("tenant_ids", "legal_entity_ids"):
+        if not any(attribute.get("name") == attribute_name for attribute in profile["attributes"]):
+            profile["attributes"].append({"name": attribute_name, "displayName": "Authorised scope",
+                                          "multivalued": True, "permissions": {"view": ["admin"], "edit": ["admin"]}})
+            changed = True
+    if changed:
         request(root + "/users/profile", profile, admin, method="PUT")
     request(root + "/users", {"username": "synthetic-user", "enabled": True, "emailVerified": True,
             "firstName": "Synthetic", "lastName": "User", "email": "synthetic@example.invalid",
-            "attributes": {"tenant_ids": ["10000000-0000-4000-8000-000000000001"]},
+            "attributes": {"tenant_ids": ["10000000-0000-4000-8000-000000000001"],
+                           "legal_entity_ids": ["20000000-0000-4000-8000-000000000001"]},
             "credentials": [{"type": "password", "value": os.environ["EPI_KEYCLOAK_USER_PASSWORD"], "temporary": False}]}, admin)
     request(root + "/users", {"username": "synthetic-limited", "enabled": True, "emailVerified": True,
             "firstName": "Synthetic", "lastName": "Limited", "email": "limited@example.invalid",
-            "attributes": {"tenant_ids": ["10000000-0000-4000-8000-000000000001"]},
+            "attributes": {"tenant_ids": ["10000000-0000-4000-8000-000000000001"],
+                           "legal_entity_ids": ["20000000-0000-4000-8000-000000000001"]},
             "credentials": [{"type": "password", "value": os.environ["EPI_KEYCLOAK_LIMITED_PASSWORD"], "temporary": False}]}, admin)
     users = request(root + "/users?username=synthetic-user&exact=true", token=admin, method="GET")
+    for username, password_name in (("synthetic-user", "EPI_KEYCLOAK_USER_PASSWORD"),
+                                    ("synthetic-limited", "EPI_KEYCLOAK_LIMITED_PASSWORD")):
+        entry = request(root + "/users?" + urllib.parse.urlencode({"username": username, "exact": "true"}), token=admin, method="GET")[0]
+        entry["attributes"] = {"tenant_ids": ["10000000-0000-4000-8000-000000000001"],
+                               "legal_entity_ids": ["20000000-0000-4000-8000-000000000001"]}
+        request(root + f"/users/{entry['id']}", entry, admin, method="PUT")
+        request(root + f"/users/{entry['id']}/reset-password",
+                {"type": "password", "value": os.environ[password_name], "temporary": False}, admin, method="PUT")
     role = request(root + "/roles/foundation-reader", token=admin, method="GET")
     request(root + f"/users/{users[0]['id']}/role-mappings/realm", [role], admin)
 

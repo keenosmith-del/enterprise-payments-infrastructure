@@ -6,7 +6,8 @@ from psycopg import sql
 TENANTS = (("10000000-0000-4000-8000-000000000001", "Synthetic Tenant A"),
            ("10000000-0000-4000-8000-000000000002", "Synthetic Tenant B"))
 ENTITIES = (("20000000-0000-4000-8000-000000000001", TENANTS[0][0], "Synthetic Entity A"),
-            ("20000000-0000-4000-8000-000000000002", TENANTS[1][0], "Synthetic Entity B"))
+            ("20000000-0000-4000-8000-000000000002", TENANTS[1][0], "Synthetic Entity B"),
+            ("20000000-0000-4000-8000-000000000003", TENANTS[0][0], "Synthetic Entity A Restricted"))
 
 
 def seed(dsn: str) -> None:

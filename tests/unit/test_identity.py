@@ -18,7 +18,8 @@ def signed_tokens():
     verifier.keys.get_signing_key_from_jwt = Mock(return_value=SimpleNamespace(key=key.public_key()))
     base = {"iss": verifier.issuer, "aud": verifier.audience, "sub": "synthetic",
             "iat": datetime.now(timezone.utc), "exp": datetime.now(timezone.utc) + timedelta(minutes=5),
-            "tenant_ids": ["10000000-0000-4000-8000-000000000001"], "principal_kind": "human",
+            "tenant_ids": ["10000000-0000-4000-8000-000000000001"],
+            "legal_entity_ids": ["20000000-0000-4000-8000-000000000001"], "principal_kind": "human",
             "realm_access": {"roles": ["foundation-reader"]}, "scope": "foundation.read"}
     return verifier, key, base
 

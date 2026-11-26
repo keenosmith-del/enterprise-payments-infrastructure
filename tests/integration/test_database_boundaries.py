@@ -37,7 +37,7 @@ def test_bootstrap_migrate_seed_and_role_isolation() -> None:
         seed(migration)
         with psycopg.connect(runtime) as conn:
             assert conn.execute("SELECT count(*) FROM tenant").fetchone()[0] == 2
-            assert conn.execute("SELECT count(*) FROM legal_entity").fetchone()[0] == 2
+            assert conn.execute("SELECT count(*) FROM legal_entity").fetchone()[0] == 3
             assert conn.execute("SELECT count(*) FROM foundation_principal").fetchone()[0] == 3
             assert conn.execute("SELECT count(*) FROM application_config").fetchone()[0] == 2
             assert conn.execute("SELECT version_num FROM foundation_schema_revision").fetchone()[0] == "m01_principals"

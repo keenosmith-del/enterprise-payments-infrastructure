@@ -11,6 +11,7 @@ for (const port of [5173, 5174, 5175, 5176]) {
     await expect(page.getByText('Signed in')).toBeVisible();
     await expect(page.getByText('Synthetic Entity A')).toBeVisible();
     await expect(page.getByText('Synthetic Entity B')).toHaveCount(0);
+    await expect(page.getByText('Synthetic Entity A Restricted')).toHaveCount(0);
     await page.getByRole('button', { name: 'Sign out' }).click();
     await expect(page.getByRole('button', { name: 'Sign in' })).toBeVisible();
   });

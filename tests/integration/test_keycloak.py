@@ -20,6 +20,7 @@ def test_keycloak_issued_token_and_wrong_audience(app):
     assert "foundation-reader" in principal.roles
     assert "foundation.read" in principal.scopes
     assert len(principal.tenants) == 1
+    assert len(principal.legal_entities) == 1
     wrong = OIDCVerifier(ISSUER, "not-this-app", ISSUER + "/protocol/openid-connect/certs")
     with pytest.raises(HTTPException) as error:
         wrong.verify(access_token)
