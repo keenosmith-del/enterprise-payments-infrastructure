@@ -1,0 +1,125 @@
+EPI M00 verification | 26 November 2026
+Commit: unavailable (canonical Git metadata could not be created)
+Host: macOS 27.0.1 arm64, Apple M5, CPython 3.12.15, OpenSSH 10.3p1
+
+Baseline
+$ python3 scripts/validate_baseline.py
+functional: 38 baseline entries checked
+nonfunctional: 11 baseline entries checked
+decisions: 9 baseline entries checked
+scenarios: 12 baseline entries checked
+milestones: 24 baseline entries checked
+crosswalk: 34 baseline entries checked
+moneyhub: 9 baseline entries checked
+unknowns: 7 baseline entries checked
+PASS: source fingerprints, canonical IDs, catalogue text, source definitions, Markdown format and local links.
+No engineering, infrastructure, payment or regulatory verification was performed.
+exit=0
+
+Local probes
+$ python3.12 -m unittest discover -s scripts/m00 -p test_local_probes.py -v
+test_exact_minor_units (test_local_probes.LocalProbes.test_exact_minor_units) ... ok
+test_provider_commit_then_lost_ack (test_local_probes.LocalProbes.test_provider_commit_then_lost_ack) ... ok
+test_sftp_subsystem_readiness_and_duplicate_file (test_local_probes.LocalProbes.test_sftp_subsystem_readiness_and_duplicate_file) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.116s
+
+OK
+exit=0
+
+Python syntax
+$ python3.12 -m compileall -q scripts
+exit=0
+
+SFTP Bash syntax
+$ bash -n scripts/m00/probe_sftp_ssh.sh
+exit=0
+
+Compose schema only
+$ EPI_M00_POSTGRES_PASSWORD=config-validation-only EPI_M00_AMQP_PASSWORD=config-validation-only docker compose -f scripts/m00/compose.yaml config -q
+exit=0
+
+Workflow YAML syntax only
+$ ruby -rpsych -e 'abort unless Psych.parse_file(ARGV.fetch(0))' .github/workflows/m00-verification.yml
+exit=0
+
+Git status
+$ git status --short --branch
+fatal: not a git repository (or any of the parent directories): .git
+exit=128
+
+Canonical Git initialisation
+$ git init -b main
+/Users/keenosmith/Programming/Projects/qlink-moneyhub/enterprise-payments-infrastructure/.git: Operation not permitted
+exit=1
+
+GitHub CLI connectivity
+$ gh api user --jq .login
+error connecting to api.github.com
+check your internet connection or https://githubstatus.com
+exit=1
+
+Docker daemon
+$ docker compose ls
+failed to connect to the docker API at unix:///Users/keenosmith/.docker/run/docker.sock; check if the path is correct and if the daemon is running: dial unix /Users/keenosmith/.docker/run/docker.sock: connect: no such file or directory
+exit=1
+
+Service startup attempt
+$ EPI_M00_POSTGRES_PASSWORD=config-validation-only EPI_M00_AMQP_PASSWORD=config-validation-only docker compose -p epi-m00 -f scripts/m00/compose.yaml up -d --wait
+failed to connect to the docker API at unix:///Users/keenosmith/.docker/run/docker.sock; check if the path is correct and if the daemon is running: dial unix /Users/keenosmith/.docker/run/docker.sock: connect: no such file or directory
+exit=1
+
+Network restriction
+$ python3.12 -c 'import socket; s=socket.socket(); s.bind(("127.0.0.1", 0))'
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+PermissionError: [Errno 1] Operation not permitted
+exit=1
+
+Probe virtual environment
+$ python3.12 -m venv <temporary directory>/venv
+exit=0
+
+Probe dependencies
+$ <venv>/bin/python -m pip install --no-cache-dir --disable-pip-version-check --retries 0 --timeout 5 -r scripts/m00/requirements.txt
+ERROR: Could not find a version that satisfies the requirement duckdb==1.4.3 (from versions: none)
+ERROR: No matching distribution found for duckdb==1.4.3
+exit=1
+
+Final revision checks
+
+$ python3 scripts/validate_baseline.py
+functional: 38 baseline entries checked
+nonfunctional: 11 baseline entries checked
+decisions: 9 baseline entries checked
+scenarios: 12 baseline entries checked
+milestones: 24 baseline entries checked
+crosswalk: 34 baseline entries checked
+moneyhub: 9 baseline entries checked
+unknowns: 7 baseline entries checked
+PASS: source fingerprints, canonical IDs, catalogue text, source definitions, Markdown format and local links.
+No engineering, infrastructure, payment or regulatory verification was performed.
+exit=0
+
+$ python3.12 -m unittest discover -s scripts/m00 -p test_local_probes.py -v
+test_exact_minor_units (test_local_probes.LocalProbes.test_exact_minor_units) ... ok
+test_provider_commit_then_lost_ack (test_local_probes.LocalProbes.test_provider_commit_then_lost_ack) ... ok
+test_sftp_subsystem_readiness_and_duplicate_file (test_local_probes.LocalProbes.test_sftp_subsystem_readiness_and_duplicate_file) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.113s
+
+OK
+exit=0
+
+$ python3.12 -m compileall -q scripts
+exit=0
+
+$ bash -n scripts/m00/probe_sftp_ssh.sh
+exit=0
+
+$ ruby -rpsych -e 'abort unless Psych.parse_file(ARGV.fetch(0))' .github/workflows/m00-verification.yml
+exit=0
+
+Pattern scan: no obvious private key headers or GitHub/AWS token patterns in text files.

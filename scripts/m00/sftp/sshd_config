@@ -1,0 +1,14 @@
+Port 22
+HostKey /probe-keys/host
+AuthorizedKeysFile /probe-keys/%u.pub
+AuthenticationMethods publickey
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+PermitRootLogin no
+AllowUsers partner_a partner_b
+DisableForwarding yes
+PermitTTY no
+UsePAM no
+ChrootDirectory /srv/sftp/%u
+Subsystem sftp internal-sftp
+ForceCommand internal-sftp -d /inbox

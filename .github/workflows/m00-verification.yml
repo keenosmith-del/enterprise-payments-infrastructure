@@ -1,0 +1,68 @@
+name: M00 verification
+
+on:
+  push:
+    branches: [main, codex/m00-architecture-baseline]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  baseline:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - run: python3 scripts/validate_baseline.py
+      - run: python3 -m compileall -q scripts
+      - run: |
+          if ! test -x /usr/lib/openssh/sftp-server; then
+            sudo apt-get update
+            sudo apt-get install -y openssh-sftp-server
+          fi
+          python3 -m unittest discover -s scripts/m00 -p test_local_probes.py -v
+
+  services:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Prepare disposable credentials
+        run: |
+          for service in POSTGRES AMQP; do
+            password="$(openssl rand -hex 20)"
+            echo "::add-mask::$password"
+            echo "EPI_M00_${service}_PASSWORD=$password" >> "$GITHUB_ENV"
+          done
+      - name: Run infrastructure probes
+        run: |
+          python3 -m venv "$RUNNER_TEMP/epi-probes"
+          "$RUNNER_TEMP/epi-probes/bin/python" -m pip install -r scripts/m00/requirements.txt
+          docker compose -p epi-m00 -f scripts/m00/compose.yaml up -d --wait
+          docker compose -p epi-m00 -f scripts/m00/compose.yaml images
+          docker stats --no-stream --format '{{.Name}} {{.CPUPerc}} {{.MemUsage}}' $(docker compose -p epi-m00 -f scripts/m00/compose.yaml ps -q)
+          export EPI_M00_POSTGRES_DSN="postgresql://epi_probe:$EPI_M00_POSTGRES_PASSWORD@127.0.0.1:55432/epi_probe"
+          export EPI_M00_AMQP_URL="amqp://epi_probe:$EPI_M00_AMQP_PASSWORD@127.0.0.1:55672/%2F"
+          "$RUNNER_TEMP/epi-probes/bin/python" -m unittest discover -s scripts/m00 -p test_service_probes.py -v
+      - name: Remove disposable services
+        if: always()
+        run: |
+          if [[ -n "${EPI_M00_POSTGRES_PASSWORD:-}" && -n "${EPI_M00_AMQP_PASSWORD:-}" ]]; then
+            docker compose -p epi-m00 -f scripts/m00/compose.yaml down -v
+          fi
+
+  networked-sftp:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Check SSH authentication and directory separation
+        run: bash scripts/m00/probe_sftp_ssh.sh

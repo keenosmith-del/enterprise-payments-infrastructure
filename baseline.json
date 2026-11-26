@@ -1,0 +1,1011 @@
+{
+  "version": "0.1.0",
+  "date": "2026-11-26",
+  "project": "Enterprise Payments Infrastructure",
+  "source_documents": [
+    {
+      "id": "D01",
+      "file": "docs/discovery/01_Independent_Engineering_Exploration_Brief_Revised.pdf",
+      "sha256": "12e09d9eacd7dc2eea02fb5c2d93954e1e73d5852cb5acc93b0bc1f055379d00",
+      "pages": 5
+    },
+    {
+      "id": "D02",
+      "file": "docs/discovery/02_Comprehensive_MoneyHub_Current_State_Assessment.pdf",
+      "sha256": "01373df0d4e63f647122a60dc1408668e5a73b224751c7eb8b6336994c91a3d5",
+      "pages": 14
+    },
+    {
+      "id": "D03",
+      "file": "docs/discovery/03_South_African_Payments_Collections_and_Insurance_Infrastructure_Assessment.pdf",
+      "sha256": "c7fee0383c6967c9afc13c0c27b2eb762d1a3d8660ae78ae36df831d1d1b3398",
+      "pages": 16
+    },
+    {
+      "id": "D04",
+      "file": "docs/discovery/04_Proposed_Solution_and_Engineering_Requirements.pdf",
+      "sha256": "9eaa585dc593161fae870be990644d71bb4c348a9286cb309b0bba374773d3ec",
+      "pages": 28
+    }
+  ],
+  "catalogues": {
+    "functional": [
+      {
+        "id": "FR-001",
+        "text": "Policy and product administration (C; PAS). Maintain synthetic policyholder, beneficiary, product, policy and effective-dated coverage records. Support creation, amendment, cancellation and reinstatement under explicit configurable rules. Acceptance: independently create a policy, change a product prospectively, and demonstrate that a historical bill retains its original product and coverage context.",
+        "status": "not_started",
+        "source": "D04 §15"
+      },
+      {
+        "id": "FR-002",
+        "text": "Premium obligations and billing cycles (C; PAS). Generate unique, immutable premium obligations per policy and billing period; support adjustments and recurring schedules. Maintain receivable and account history. Acceptance: rerun a bill cycle concurrently and show one obligation per eligible policy and period; demonstrate a backdated adjustment without mutation of the prior obligation.",
+        "status": "not_started",
+        "source": "D04 §15"
+      },
+      {
+        "id": "FR-003",
+        "text": "Claims and refunds (C; PAS, hub). Manage synthetic claims approvals and eligible refund authorisations with amount limits and stable payable references. The PAS originates approved payables; the hub must not create an insurance entitlement. Acceptance: reject unapproved claims, duplicate approvals and excess refunds; execute an approved payment and reconcile a returned payment without losing the payable history.",
+        "status": "not_started",
+        "source": "D04 §15"
+      },
+      {
+        "id": "FR-004",
+        "text": "Financial result consumption (C; PAS). Receive immutable payment, allocation and reversal events, validate the referenced obligation, apply once and acknowledge consumption. Separate arrears and grace policy decisions from collection failures. Acceptance: deliver an allocation twice, then a late reversal; demonstrate correct outstanding amount and documented policy-state decisions, including an unknown obligation quarantine.",
+        "status": "not_started",
+        "source": "D04 §15"
+      },
+      {
+        "id": "FR-005",
+        "text": "Canonical instruction intake (C; hub, integration). Accept versioned collection and disbursement commands, retain source provenance, validate canonical fields and issue durable receipts. Acceptance: equivalent API and batch inputs create the same domain representation; invalid amount, currency or tenant claims are rejected without dispatch.",
+        "status": "not_started",
+        "source": "D04 §15"
+      },
+      {
+        "id": "FR-006",
+        "text": "REST integration (C; integration, all systems). Provide independently documented inbound and outbound APIs with scoped authentication, stable source IDs, receipt/status enquiry and compatible schema evolution. Acceptance: run positive, malformed, unauthenticated, duplicate and incompatible-version contract tests across at least two independent application boundaries.",
+        "status": "not_started",
+        "source": "D04 §15"
+      },
+      {
+        "id": "FR-007",
+        "text": "Message integration (C; integration, all systems). Implement durable commands and events, transactional outbox/inbox, acknowledgement, bounded retry and quarantined failure handling. Acceptance: stop the broker, restart relay and consumer, duplicate delivery and reorder events; demonstrate eventual delivery of eligible commands without duplicate effects or stale state replacement.",
+        "status": "not_started",
+        "source": "D04 §15"
+      },
+      {
+        "id": "FR-008",
+        "text": "Secure file exchange (C; integration). Operate a real SFTP exchange with segregated partner accounts, manifest validation, atomic file readiness, controlled imports, acknowledgement and outcome exports. Acceptance: exchange a valid batch end to end; test partial upload, invalid digest, total mismatch, malformed record, duplicate file and changed duplicate; verify exactly which records were accepted or rejected.",
+        "status": "not_started",
+        "source": "D04 §15"
+      },
+      {
+        "id": "FR-009",
+        "text": "Enterprise adapter and mapping framework (C; integration, hub). Provide versioned transport and provider mappings, canonical error taxonomy and capability declarations. Preserve raw external codes and source records. Acceptance: add a second synthetic provider using a different schema; run the same financial contract tests without changing the core collections state model.",
+        "status": "not_started",
+        "source": "D04 §15"
+      },
+      {
+        "id": "FR-010",
+        "text": "Instruction and attempt identity (C; hub). Enforce stable source IDs, material payload comparison, separate attempt identities and durable provider operation references across transports. Acceptance: send the same instruction concurrently through REST and SFTP; one instruction is accepted and only one eligible financial execution occurs. Reuse its identity with changed amount and confirm a conflict without execution.",
+        "status": "not_started",
+        "source": "D04 §15"
+      },
+      {
+        "id": "FR-011",
+        "text": "Mandate lifecycle (C; hub, bank/payroll). Maintain channel-specific authority, external references, authentication evidence, effective dates, amendment, revocation and expiration. Acceptance: exercise authenticated, rejected, expired, amended and revoked authority; no new attempt may dispatch under invalid or superseded terms.",
+        "status": "not_started",
+        "source": "D04 §15"
+      },
+      {
+        "id": "FR-012",
+        "text": "Account and beneficiary management (C; hub, bank). Verify synthetic account references and manage effective-dated beneficiary records with controlled changes. Treat verification as distinct from consent. Acceptance: reject a mismatched or unapproved beneficiary version, prevent self-approval of sensitive changes and demonstrate that verified account status alone cannot authorise a deduction.",
+        "status": "not_started",
+        "source": "D04 §15"
+      },
+      {
+        "id": "FR-013",
+        "text": "Scheduling and channel selection (C; hub). Evaluate business dates, cut-offs, amount constraints, permitted channel, attempt limits and rule version before dispatch. Acceptance: test holiday/cut-off boundaries, cancelled mandates, in-flight amount reservations and an authorised alternative channel; unresolved earlier execution prevents fallback.",
+        "status": "not_started",
+        "source": "D04 §15"
+      },
+      {
+        "id": "FR-014",
+        "text": "Bank collections (C; hub, bank). Process once-off and recurring EFT debit, DebiCheck and Registered Mandate collections using distinct simulated authorisation and outcome contracts. Acceptance: independently execute a full, partial, unpaid and returned collection; each channel rejects invalid authority under its own rules and produces a provider-side record.",
+        "status": "not_started",
+        "source": "D04 §15"
+      },
+      {
+        "id": "FR-015",
+        "text": "Banking and payment simulation (C; bank). Maintain independent account balances, mandate responses, provider operations, outcome enquiry, statement and settlement generation. Acceptance: prove bank evidence is generated from independent persisted execution; inject delayed, duplicate, lost, conflicting and returned outcomes while preserving provider accounting and duplicate controls.",
+        "status": "not_started",
+        "source": "D04 §15"
+      },
+      {
+        "id": "FR-016",
+        "text": "Payroll administration and deductions (C; payroll). Represent employer configuration, employee references, authority, payroll cycle, eligible deduction capacity and deduction/remittance history. Acceptance: process two employers with different file mappings and cut-offs, including termination, partial deductions, affordability rejection and cycle closure; no fictitious HR system is required.",
+        "status": "not_started",
+        "source": "D04 §15"
+      },
+      {
+        "id": "FR-017",
+        "text": "Payroll collection integration (C; hub, payroll). Submit eligible salary deductions, process item results and remittances and distinguish acceptance, actual deduction and bank receipt. Acceptance: reconcile an aggregated remittance with constituent deductions, identify a missing remittance and trace a corrected remittance without repeated allocation.",
+        "status": "not_started",
+        "source": "D04 §15"
+      },
+      {
+        "id": "FR-018",
+        "text": "Outbound disbursements (C; hub, bank). Process approved claims and refunds as synthetic EFT credits, support applicable batch windows and track returns. Acceptance: submit a valid approved payable, reject duplicate and insufficient approval, independently observe settlement and account for a return before authorised replacement.",
+        "status": "not_started",
+        "source": "D04 §15"
+      },
+      {
+        "id": "FR-019",
+        "text": "Transaction outcome and recovery (C; hub, providers). Record independent execution, settlement and allocation states; handle ambiguity through enquiry and late evidence. Acceptance: interrupt a worker before commit, after local commit, and after provider execution before acknowledgement; recover without losing an instruction or producing another financial movement. Unresolvable status remains on hold.",
+        "status": "not_started",
+        "source": "D04 §15"
+      },
+      {
+        "id": "FR-020",
+        "text": "Immutable financial-control journal (C; hub, PAS). Enforce balanced exact-value postings, unique source-purpose keys, authorisation, immutable posting and compensating correction. Respect separate PAS and non-custodial hub accounting boundaries. Acceptance: property-based and concurrent tests prove zero posted imbalances, duplicate postings and unauthorised mutations; reversals and closed-period adjustments remain independently traceable.",
+        "status": "not_started",
+        "source": "D04 §15"
+      },
+      {
+        "id": "FR-021",
+        "text": "Settlement ingestion and tracking (C; hub, bank/payroll). Import independent settlement, statement and remittance evidence with batches, item references, gross/net values, fees and dates. Acceptance: process delayed, duplicated and revised files; retain the original records and prove that a reported execution success is not automatically treated as settled.",
+        "status": "not_started",
+        "source": "D04 §15"
+      },
+      {
+        "id": "FR-022",
+        "text": "Payment and cash-deposit matching (C; hub). Match known references and eligible deterministic candidates; support unidentified deposits, partial receipts and ambiguous cases. Acceptance: match a referenced deposit, hold a duplicate-amount ambiguous deposit, resolve a reviewed match and prevent allocation over the available balance.",
+        "status": "not_started",
+        "source": "D04 §15"
+      },
+      {
+        "id": "FR-023",
+        "text": "Three-way reconciliation (C; hub). Compare obligations/instructions, execution results and independent settlement evidence, including aggregate and partial matching, fees, late results and returns. Acceptance: reproduce the worked control totals from independent datasets; introduce a missing fee, duplicated settlement, delayed receipt and conflicting reference; every discrepancy is explained or retained as an unresolved exception.",
+        "status": "not_started",
+        "source": "D04 §15"
+      },
+      {
+        "id": "FR-024",
+        "text": "Allocation and result delivery (C; hub, PAS). Allocate only eligible matched funds, retain posting and source links, issue immutable results and await consumer receipt. Acceptance: apply one receipt across multiple obligations and multiple receipts to one obligation, reject over-allocation under concurrent workers, and demonstrate late reversal and repeated delivery without a second PAS effect.",
+        "status": "not_started",
+        "source": "D04 §15"
+      },
+      {
+        "id": "FR-025",
+        "text": "Exception management and correction (C; hub). Create actionable cases from validation, execution and reconciliation failures, with assignment, status, reason, evidence, approvals and correction history. Acceptance: resolve an ambiguous candidate through authorised review, reject self-approval and reproduce the original and corrected financial views. Never delete discrepancies to achieve a balanced report.",
+        "status": "not_started",
+        "source": "D04 §15"
+      },
+      {
+        "id": "FR-026",
+        "text": "Versioned business rules (C; hub, PAS). Define and evaluate restricted declarative policies for processing, schedules, approvals and product integration. Rules must not override financial or authority invariants. Acceptance: activate a future-dated version, reproduce a prior decision, reject an invalid rule and prove the result records inputs and rule version.",
+        "status": "not_started",
+        "source": "D04 §15"
+      },
+      {
+        "id": "FR-027",
+        "text": "Rules simulation and optimisation (E; hub). Compare prospective collection rules against a frozen synthetic cohort with measurable eligibility, collections, returns and cost indicators. Acceptance: publish reproducible baseline and candidate results with control totals, identify adverse cases and demonstrate no live-mode execution from the simulation environment.",
+        "status": "not_started",
+        "source": "D04 §15"
+      },
+      {
+        "id": "FR-028",
+        "text": "Tenant and identity administration (C; all systems). Configure enterprise tenants, legal entities, users, service identities, roles and partner permissions. Acceptance: use two tenants with overlapping external references; negative tests prove cross-tenant reads, writes, exports, object access and processing are rejected. Verify distinct maker and approver principals.",
+        "status": "not_started",
+        "source": "D04 §15"
+      },
+      {
+        "id": "FR-029",
+        "text": "Audit and evidence inspection (C; all systems). Record source receipts, material decisions, actor identities, approvals and historical changes and support authorised evidence exports. Acceptance: independently reconstruct an instruction from obligation through provider execution, settlement, journal and allocation, including a correction; verify exported hashes and access boundaries.",
+        "status": "not_started",
+        "source": "D04 §15"
+      },
+      {
+        "id": "FR-030",
+        "text": "Operational user interfaces (C; all systems). Expose role-appropriate business actions, accurate states, transaction inspection and system administration. Acceptance: browser tests execute a complete bill-to-allocation and claim-to-settlement journey, including a failure case; all displayed amounts originate from persisted records and restricted actions are enforced by the backend.",
+        "status": "not_started",
+        "source": "D04 §15"
+      },
+      {
+        "id": "FR-031",
+        "text": "Operational reporting and metric definitions (C; hub, PAS). Publish financial and operational metrics from actual processed records with explicit grain, period, denominator and freshness. Acceptance: independently recompute expected, collected, settled, outstanding, returned and allocated values from source records; pending and unknown are not counted as successful.",
+        "status": "not_started",
+        "source": "D04 §15"
+      },
+      {
+        "id": "FR-032",
+        "text": "Analytical exports and data lake (E; analytics). Extract committed records to immutable raw objects, transform validated and business-ready Parquet datasets, preserve manifests, lineage and checkpoints. Acceptance: interrupt and rerun a pipeline, replay duplicate exports and ingest a late reversal; the resulting aggregates match independent source queries and no pipeline failure alters operational state.",
+        "status": "not_started",
+        "source": "D04 §15"
+      },
+      {
+        "id": "FR-033",
+        "text": "Business intelligence model (E; analytics). Provide a documented semantic model, analytical measures and role-appropriate reports, including Power BI integration subject to supported environment and licensing. Acceptance: reproduce report values from the curated dataset, verify drill-through and freshness, and record actual Power BI execution or its explicit environment blocker with a working alternative reporting path.",
+        "status": "not_started",
+        "source": "D04 §15"
+      },
+      {
+        "id": "FR-034",
+        "text": "Partner onboarding and integration certification (E; integration). Configure a new representative partner through credentials, mappings, contracts, validation and test exchange. Acceptance: onboard a second synthetic insurer or integration profile without a core-code fork, pass its compatibility suite and document activation and rollback.",
+        "status": "not_started",
+        "source": "D04 §15"
+      },
+      {
+        "id": "FR-035",
+        "text": "Digital services and payment expansion (E; hub, bank). Extend the adapter model with simulated instant credit and request-to-pay flows and a documented value-added service such as account verification. Acceptance: execute each supported new flow with separate authority, outcome and settlement semantics, verify unsupported capability rejection and run regression tests for baseline channels.",
+        "status": "not_started",
+        "source": "D04 §15"
+      },
+      {
+        "id": "FR-036",
+        "text": "Legacy migration and shadow processing (E; PAS, hub, integration). Import historical obligations and authority references, compare parallel decisions without financial execution, enforce exclusive cutover ownership and support safe rollback. Acceptance: reconcile imported opening balances, prove shadow mode cannot dispatch, verify one owner at cutover and resolve prior submitted operations before rollback routing resumes.",
+        "status": "not_started",
+        "source": "D04 §15"
+      },
+      {
+        "id": "FR-037",
+        "text": "Replay and engineering evidence environment (E; all systems). Provide deterministic scenario seeds, fault schedules, receipt lineage, controlled replay and downloadable machine-readable evidence. Acceptance: reproduce an incident from captured inputs and rule versions in an isolated environment and prove replay does not change the original financial records or create repeated external effects.",
+        "status": "not_started",
+        "source": "D04 §15"
+      },
+      {
+        "id": "FR-038",
+        "text": "Optional intelligence evaluation (O; analytics). Evaluate one or two narrowly scoped models for prediction, anomaly detection or matching assistance. Acceptance: use held-out synthetic periods, compare against deterministic baselines, report errors, coverage and relevant subgroup outcomes; no model may autonomously authorise, execute or post a financial operation. If not pursued, record the decision without blocking core acceptance.",
+        "status": "not_started",
+        "source": "D04 §15"
+      }
+    ],
+    "nonfunctional": [
+      {
+        "id": "NFR-001",
+        "text": "Financial integrity. Zero unbalanced posted journals, duplicate financial effects, unauthorised execution and over-allocation across the defined correctness suite, including concurrent workloads and replay. Assert database constraints, source-to-posting counts and independent provider records. Any failure is a release blocker.",
+        "status": "not_started",
+        "source": "D04 §16"
+      },
+      {
+        "id": "NFR-002",
+        "text": "Durability and delivery. No loss of durably accepted instructions within the tested process-crash and broker-outage scenarios. Deliver eligible work after recovery, or retain an explicit unresolved/quarantined state. Measure recovery time from fault removal to resumed processing and backlog clearance. Full disaster recovery is separately tested; the durability requirement does not imply zero loss after an untested storage catastrophe.",
+        "status": "not_started",
+        "source": "D04 §16"
+      },
+      {
+        "id": "NFR-003",
+        "text": "Isolation and authorisation. Zero successful unauthorised operations in the defined negative test suite. Enforce role and tenant boundaries for API, broker, file, database, object storage and BI interfaces; include privileged actions and stale or conflicting authority. Critical unresolved security findings block release.",
+        "status": "not_started",
+        "source": "D04 §16"
+      },
+      {
+        "id": "NFR-004",
+        "text": "Interoperability. All published core API, event and file fixtures pass schema, version, negative and cross-transport equivalence tests. An unsupported version results in an attributable rejection or quarantine. Connector change must not alter unrelated transaction outcomes.",
+        "status": "not_started",
+        "source": "D04 §16"
+      },
+      {
+        "id": "NFR-005",
+        "text": "Scale and repeatability. Preserve Document 01's target dataset of 100,000 synthetic policyholders and up to one million financial events. Define event mix, number of actual instructions, attempts and postings separately; count only committed or independently observed operations. Complete a smaller correctness cohort first, then progressively increase load. Report throughput, p50/p95/p99 latency, error counts, database growth, CPU/memory and recovery. Proposed first benchmark: sustained 100 accepted instructions per second for ten minutes with p95 durable intake latency at or below 500 ms on documented hardware, excluding provider settlement latency. These numbers require calibration and approval before becoming fixed service objectives.",
+        "status": "not_started",
+        "source": "D04 §16"
+      },
+      {
+        "id": "NFR-006",
+        "text": "Availability and recovery. Demonstrate recovery from worker termination, unavailable broker, unavailable provider, delayed file and database restart. Proposed local recovery target: resume eligible worker processing within five minutes of dependency restoration, subject to measured environment conditions. Demonstrate database and evidence-store backup/restore, record actual recovery point and recovery time, and reconcile independent provider effects before enabling dispatch. Do not claim high availability from a single-host Compose environment.",
+        "status": "not_started",
+        "source": "D04 §16"
+      },
+      {
+        "id": "NFR-007",
+        "text": "Auditability and explainability. Every accepted financial instruction retains source identity and evidence; every dispatch, posting, rule decision and manual correction is attributable. Produce a trace export covering all records involved in selected scenarios. Verify that source references, monetary totals and timestamps can be independently followed without requiring developer-only database access.",
+        "status": "not_started",
+        "source": "D04 §16"
+      },
+      {
+        "id": "NFR-008",
+        "text": "Analytical integrity. Reconcile all published financial measures to versioned source snapshots for the defined cohort; late events and duplicate imports must not distort totals. Show last successful publication time and explicit stale-data warnings. Proposed local freshness objective: a completed small batch appears in the analytical layer within five minutes of pipeline invocation, not a claim of continuous real-time processing.",
+        "status": "not_started",
+        "source": "D04 §16"
+      },
+      {
+        "id": "NFR-009",
+        "text": "Maintainability and reproducibility. A clean checkout with documented prerequisites must build, migrate, seed and run the core ecosystem. CI executes the same critical verification used locally. Keep versioned schemas, migrations, dependency pins, configuration examples and a documented upgrade path. No secret, proprietary asset or real customer record may be required for reproduction.",
+        "status": "not_started",
+        "source": "D04 §16"
+      },
+      {
+        "id": "NFR-010",
+        "text": "Operational and interface quality. Provide meaningful errors, accessible keyboard navigation, labelled controls, readable transaction detail and actionable operational status. Test key workflows at supported desktop viewport sizes; avoid client-side monetary calculations as the authoritative source. Operator recovery procedures must be documented and exercised.",
+        "status": "not_started",
+        "source": "D04 §16"
+      },
+      {
+        "id": "NFR-011",
+        "text": "Data protection and compliance boundaries. Use synthetic identities only; enforce least privilege, retention, secret handling, redaction and controlled exports. Complete a threat model and data inventory. Evidence must state that the simulation is not licensed, certified, connected to live payment rails or verified for production compliance. Review current legal obligations separately before any commercial use.",
+        "status": "not_started",
+        "source": "D04 §16"
+      }
+    ],
+    "decisions": [
+      {
+        "id": "ADR-P01",
+        "text": "Independent application boundaries. Keep four separate systems and prohibit shared domain writes. A single application with one database would reduce infrastructure effort but fail to exercise independent integration and reconciliation. Consequence: more explicit contracts, seed procedures and distributed recovery tests.",
+        "status": "proposed",
+        "source": "D04 §18"
+      },
+      {
+        "id": "ADR-P02",
+        "text": "Modular hub before service extraction. Keep core financial operations in one transactional persistence boundary with separate workers. Reject premature service fragmentation; evaluate extraction after measurements reveal independent scaling or isolation needs. Consequence: module ownership must be enforced even in one process.",
+        "status": "proposed",
+        "source": "D04 §18"
+      },
+      {
+        "id": "ADR-P03",
+        "text": "Python and PostgreSQL first. Prefer a familiar Python/SQL environment with transactional constraints. Java and .NET remain candidates if benchmarks or domain modelling requirements justify a change. Consequence: concurrency, exact monetary representation and transaction isolation must be demonstrated rather than presumed.",
+        "status": "proposed",
+        "source": "D04 §18"
+      },
+      {
+        "id": "ADR-P04",
+        "text": "Durable at-least-once transport. Prefer outbox/inbox and stable operation IDs over claims of exactly-once message delivery. Consequence: every consumer and external adapter must specify retry and idempotency semantics; ambiguous outcomes require enquiry or hold.",
+        "status": "proposed",
+        "source": "D04 §18"
+      },
+      {
+        "id": "ADR-P05",
+        "text": "Non-custodial financial boundary. Keep the insurer's receivable ledger separate from the hub's operational control journal. Consequence: settlement evidence must substantiate control postings; no claim of real custody or statutory accounting compliance.",
+        "status": "proposed",
+        "source": "D04 §18"
+      },
+      {
+        "id": "ADR-P06",
+        "text": "Independent three-source reconciliation. Choose obligations/instructions, execution and settlement as the core model, with explicit subordinate payroll evidence. Consequence: simulator statements must be independent; exact MoneyHub matching internals are not required or claimed.",
+        "status": "proposed",
+        "source": "D04 §18"
+      },
+      {
+        "id": "ADR-P07",
+        "text": "Analytics separate from operations. Use exported records, versioned transformations and a curated model. Consequence: analytics may lag and needs lineage and freshness metrics; financial processing does not depend on BI availability.",
+        "status": "proposed",
+        "source": "D04 §18"
+      },
+      {
+        "id": "ADR-P08",
+        "text": "Real local integrations, synthetic financial rails. Use actual HTTP, broker and SFTP communication while simulating money movement and scheme rules. Consequence: tests exercise real transport behaviour without asserting bank certification or regulated activity.",
+        "status": "proposed",
+        "source": "D04 §18"
+      },
+      {
+        "id": "ADR-P09",
+        "text": "AI after deterministic verification. Keep model-based assistance outside financial authority and posting. Consequence: optional models require meaningful baseline comparisons; a model can be excluded without compromising core completeness.",
+        "status": "proposed",
+        "source": "D04 §18"
+      }
+    ],
+    "scenarios": [
+      {
+        "id": "SC-01",
+        "text": "Recurring premium cycle. Create policies with monthly obligations; submit EFT debit, DebiCheck, RM and payroll instructions through different transports. Verify authority, exact amounts, independent provider outcomes, settlement, allocation and updated PAS account. Include a payer-initiated deposit. Covers FR-001 to FR-002, FR-005 to FR-017 and FR-021 to FR-024.",
+        "status": "not_run",
+        "source": "D04 §19"
+      },
+      {
+        "id": "SC-02",
+        "text": "Duplicate and conflicting instructions. Submit concurrent equivalent messages through REST, broker and file; then reuse the identity with a materially changed amount. Prove one accepted obligation effect, one eligible execution, one posting set and an attributable conflict. Covers FR-007/008/010/020 and NFR-001.",
+        "status": "not_run",
+        "source": "D04 §19"
+      },
+      {
+        "id": "SC-03",
+        "text": "Ambiguous provider execution. Commit a provider operation then lose its acknowledgement. Crash the worker; recover via independent status enquiry or later settlement evidence. Prove no second debit and no unsafe fallback. Repeat with an unavailable status endpoint and verify hold. Covers FR-015/019/025 and NFR-002/006.",
+        "status": "not_run",
+        "source": "D04 §19"
+      },
+      {
+        "id": "SC-04",
+        "text": "Authority and schedule changes. Authenticate one mandate, reject another, amend a limit, cancel a third after scheduling and test a cut-off boundary. Verify that dispatch re-evaluates current authority and a previously submitted instruction remains traceable. Covers FR-011 to FR-014 and FR-026.",
+        "status": "not_run",
+        "source": "D04 §19"
+      },
+      {
+        "id": "SC-05",
+        "text": "Payroll discrepancy. Create two employer cycles with partial deductions and affordability rejections. Return aggregate remittance with one missing employee allocation and later bank receipt. Reconcile the remittance and retain the unresolved item without forcing balance. Covers FR-016/017/021/023/024.",
+        "status": "not_run",
+        "source": "D04 §19"
+      },
+      {
+        "id": "SC-06",
+        "text": "Claims, refunds and returns. Approve a synthetic claim, release via an independently verified beneficiary, settle, return and resolve. Attempt a duplicate and excessive refund; require separate sensitive approval. Covers FR-003/012/018/020/025/028.",
+        "status": "not_run",
+        "source": "D04 §19"
+      },
+      {
+        "id": "SC-07",
+        "text": "Settlement and allocation integrity. Exercise the Section 8 example with known fees, unknown execution and late settlement, then omit fee evidence and insert duplicates. Include partial matching, multiple obligations and a late reversal in a closed accounting period. Verify exact totals, immutable adjustments and controlled approval. Covers FR-020 to FR-025 and NFR-001/007.",
+        "status": "not_run",
+        "source": "D04 §19"
+      },
+      {
+        "id": "SC-08",
+        "text": "Integration failure and replay. Transfer a partial file, corrupt the manifest, submit an incompatible schema, stop the broker and replay a dead-letter after correction. Verify receipt state, atomic acceptance policy and no duplicate financial effect. Covers FR-005 to FR-010 and NFR-002/004.",
+        "status": "not_run",
+        "source": "D04 §19"
+      },
+      {
+        "id": "SC-09",
+        "text": "Tenant and operator controls. Use overlapping references in two tenants, attempt access through APIs, storage, exports and broker routing, and attempt self-approval. Verify rejection and attributable audit records. Covers FR-025/028/029/030 and NFR-003/011.",
+        "status": "not_run",
+        "source": "D04 §19"
+      },
+      {
+        "id": "SC-10",
+        "text": "Reporting correctness. Export a processed cycle, interrupt transformation, replay and add a late reversal. Recompute all selected measures from independent operational records; verify the same versioned cohort and stale-data display. Covers FR-031 to FR-033 and NFR-008.",
+        "status": "not_run",
+        "source": "D04 §19"
+      },
+      {
+        "id": "SC-11",
+        "text": "Extension and migration. Configure a second partner, add a simulated channel, import opening balances, run shadow processing, cut over and roll back with unresolved attempts. Compare outcomes and prove exclusive dispatch ownership. Covers FR-027/034 to FR-037 and NFR-004/006.",
+        "status": "not_run",
+        "source": "D04 §19"
+      },
+      {
+        "id": "SC-12",
+        "text": "Scale and disaster recovery. Run the approved progressive workload, interrupt dependencies, restore backups and reconcile against provider records. Capture throughput and latency distributions, financial invariants, resource use, recovery point, recovery time and residual exceptions. Covers NFR-001/002/005/006/009 and FR-037.",
+        "status": "not_run",
+        "source": "D04 §19"
+      }
+    ],
+    "milestones": [
+      {
+        "id": "M00",
+        "text": "Discovery and design baseline. Approve Documents 01 to 04 with recorded gaps, establish the requirements, assumptions and decision registers, finalise the detailed architecture and financial contracts necessary for the initial slice. Gate: traceability crosswalk reviewed; unresolved decisions have an owner and approval condition.",
+        "status": "in_preparation",
+        "source": "D04 §20"
+      },
+      {
+        "id": "M01",
+        "text": "Foundation. Create repository boundaries, pinned dependencies, local Compose environment, CI, separate databases, identity skeleton and test fixtures. Gate: clean build, migration, seed, smoke tests and verified separation of service credentials.",
+        "status": "not_started",
+        "source": "D04 §20"
+      },
+      {
+        "id": "M02",
+        "text": "Financial model and persistence. Implement canonical identities, exact monetary representation, event provenance, transaction constraints, journal posting primitive and outbox/inbox foundation. Gate: balance, concurrency and duplicate tests pass before external money movement is enabled.",
+        "status": "not_started",
+        "source": "D04 §20"
+      },
+      {
+        "id": "M03",
+        "text": "PAS vertical slice. Implement policy and product versions, billing obligations, claims approval and financial result intake. Gate: independent bill run, adjustment and idempotent consumption, with no reliance on the hub's database.",
+        "status": "not_started",
+        "source": "D04 §20"
+      },
+      {
+        "id": "M04",
+        "text": "Integration gateway. Implement canonical contracts, REST, durable messaging and actual SFTP exchange with receipts. Gate: cross-transport equivalence, partial-file, duplicate and broker recovery tests.",
+        "status": "not_started",
+        "source": "D04 §20"
+      },
+      {
+        "id": "M05",
+        "text": "Mandate and beneficiary controls. Implement channel-specific authority, versions, approvals and sensitive identity changes. Gate: negative authorisation and lifecycle cases pass.",
+        "status": "not_started",
+        "source": "D04 §20"
+      },
+      {
+        "id": "M06",
+        "text": "Banking simulator and adapter. Implement independent provider records, simulated accounts, authority outcomes, status enquiry and settlement generation. Gate: provider idempotency, lost acknowledgement and independent statement evidence.",
+        "status": "not_started",
+        "source": "D04 §20"
+      },
+      {
+        "id": "M07",
+        "text": "Collections engine. Implement scheduling, attempt identity, route eligibility, amount reservation and bank collection processing. Gate: first complete bill-to-reconciled-result vertical slice using the minimal journal and reconciliation primitives; no unsafe resubmission.",
+        "status": "not_started",
+        "source": "D04 §20"
+      },
+      {
+        "id": "M08",
+        "text": "Payroll simulator and collections. Implement employer configuration, authority, deduction and remittance contracts. Gate: partial deduction, affordability and aggregated remittance evidence.",
+        "status": "not_started",
+        "source": "D04 §20"
+      },
+      {
+        "id": "M09",
+        "text": "Disbursements. Implement approved claims and refund execution, beneficiary checks and return handling. Gate: authorised credit, duplicate rejection and controlled return recovery.",
+        "status": "not_started",
+        "source": "D04 §20"
+      },
+      {
+        "id": "M10",
+        "text": "Ledger and accounting controls. Complete the dedicated ledger design, operational control accounts, posting policy, reversal and period controls. Gate: immutable balanced entries, source-purpose uniqueness and independent reconciliation of journal totals. The primitive introduced in M02 remains mandatory throughout.",
+        "status": "not_started",
+        "source": "D04 §20"
+      },
+      {
+        "id": "M11",
+        "text": "Settlement management. Complete independent statement and settlement batch import, gross/net fees, revisions and delayed evidence. Gate: execution and settlement states remain separate.",
+        "status": "not_started",
+        "source": "D04 §20"
+      },
+      {
+        "id": "M12",
+        "text": "Reconciliation and allocation. Complete three-way reconciliation, partial and aggregate matching, exceptions and return-to-PAS results. Gate: worked cases and property-based allocation controls pass with independent sources.",
+        "status": "not_started",
+        "source": "D04 §20"
+      },
+      {
+        "id": "M13",
+        "text": "Configurable rules. Implement versioned declarative policies, approval and evaluation trace. Gate: historical reproducibility and safe rule changes, with simulation isolated from dispatch.",
+        "status": "not_started",
+        "source": "D04 §20"
+      },
+      {
+        "id": "M14",
+        "text": "Operational exceptions and recovery. Complete case workflow, enquiry, approved correction, replay and support procedures. Gate: crash, retry, late-result and contradictory evidence scenarios pass.",
+        "status": "not_started",
+        "source": "D04 §20"
+      },
+      {
+        "id": "M15",
+        "text": "Operational interfaces. Complete four independent application experiences and inspection workflows. Gate: browser-tested end-to-end journeys using actual backend data.",
+        "status": "not_started",
+        "source": "D04 §20"
+      },
+      {
+        "id": "M16",
+        "text": "Security and governance assessment. Deepen tenant isolation, least privilege, threat modelling, audit, secret handling and negative tests. Gate: no unresolved critical security defect. Baseline access and integrity controls remain in all earlier milestones.",
+        "status": "not_started",
+        "source": "D04 §20"
+      },
+      {
+        "id": "M17",
+        "text": "Data engineering and reporting. Complete operational metrics, incremental exports, data lake, lineage and curated BI model. Gate: source-to-report reconciliation and pipeline recovery, with Power BI execution status recorded.",
+        "status": "not_started",
+        "source": "D04 §20"
+      },
+      {
+        "id": "M18",
+        "text": "Legacy migration and enterprise onboarding. Implement import, shadow runs, cutover, rollback and partner certification. Gate: exclusive execution, opening balance verification and traceable acceptance evidence.",
+        "status": "not_started",
+        "source": "D04 §20"
+      },
+      {
+        "id": "M19",
+        "text": "Payment and value-added service extension. Add selected simulated instant credit, request-to-pay and service adapter capabilities. Gate: new integration works without regressions or changes to unrelated core logic.",
+        "status": "not_started",
+        "source": "D04 §20"
+      },
+      {
+        "id": "M20",
+        "text": "Reliability, performance and recovery. Run the approved load and disaster recovery programme, tune measured bottlenecks and retain results. Gate: financial correctness maintained under workload and faults; quantitative target deviations explicitly reviewed.",
+        "status": "not_started",
+        "source": "D04 §20"
+      },
+      {
+        "id": "M21",
+        "text": "Optional AI feasibility. Evaluate narrow intelligence use cases only after reliable curated data is available. Gate: baseline comparison, evidence of improvement and non-authoritative decision support, or documented deferral.",
+        "status": "not_started",
+        "source": "D04 §20"
+      },
+      {
+        "id": "M22",
+        "text": "Independent engineering review. Inspect code, contracts, security, financial correctness, performance and evidence; remediate findings. Gate: reproducible independent review with remaining limitations and risks explicitly recorded.",
+        "status": "not_started",
+        "source": "D04 §20"
+      },
+      {
+        "id": "M23",
+        "text": "Final delivery. Complete release package, local runbook, verified demonstration, final technical and executive documentation, portfolio case study and walkthrough materials. Gate: a separate engineer can reproduce and inspect the claimed results. Hosted deployment is recorded as verified, deferred or blocked, not assumed.",
+        "status": "not_started",
+        "source": "D04 §20"
+      }
+    ],
+    "crosswalk": [
+      {
+        "id": "INIT.MH-01",
+        "text": "Financial system integration. D02.MH-01; FR-005 to FR-009, FR-020, FR-024. Financial intake, accounting and outbound results.",
+        "status": "baseline",
+        "source": "D04 §17"
+      },
+      {
+        "id": "INIT.MH-02",
+        "text": "Policy administration integration. D02.MH-01; FR-001 to FR-006, FR-024. Independent PAS obligations and result consumption.",
+        "status": "baseline",
+        "source": "D04 §17"
+      },
+      {
+        "id": "INIT.MH-03",
+        "text": "External banking interface abstraction. D02.MH-02; FR-009, FR-015, FR-034, FR-035. Replaceable provider contracts.",
+        "status": "baseline",
+        "source": "D04 §17"
+      },
+      {
+        "id": "INIT.MH-04",
+        "text": "Collections management. D02.MH-03; FR-010, FR-013 to FR-017, FR-019. Bank and payroll collections.",
+        "status": "baseline",
+        "source": "D04 §17"
+      },
+      {
+        "id": "INIT.MH-05",
+        "text": "Disbursement management. D02.MH-03; FR-003, FR-012, FR-018, FR-019. Approved claims and refunds.",
+        "status": "baseline",
+        "source": "D04 §17"
+      },
+      {
+        "id": "INIT.MH-06",
+        "text": "Automated payment matching. D02.MH-05; FR-022, FR-024. Deterministic matching and allocation.",
+        "status": "baseline",
+        "source": "D04 §17"
+      },
+      {
+        "id": "INIT.MH-07",
+        "text": "Cash-deposit matching. D02.MH-05; FR-015, FR-021, FR-022. Independent deposit evidence and unresolved cash.",
+        "status": "baseline",
+        "source": "D04 §17"
+      },
+      {
+        "id": "INIT.MH-08",
+        "text": "Three-way reconciliation. D02.MH-06; FR-020, FR-021, FR-023 to FR-025. Financial control and exception resolution.",
+        "status": "baseline",
+        "source": "D04 §17"
+      },
+      {
+        "id": "INIT.MH-09",
+        "text": "Configurable automation. D02.MH-07; FR-013, FR-026, FR-027. Versioned processing rules and simulation.",
+        "status": "baseline",
+        "source": "D04 §17"
+      },
+      {
+        "id": "INIT.MH-10",
+        "text": "Mandate management. D02.MH-04; FR-011, FR-012, FR-014, FR-016. Distinct authorisation models.",
+        "status": "baseline",
+        "source": "D04 §17"
+      },
+      {
+        "id": "INIT.MH-11",
+        "text": "Data-driven decision-making. D02.MH-08; FR-027, FR-031 to FR-033; optionally FR-038. Verified analytics without requiring AI.",
+        "status": "baseline",
+        "source": "D04 §17"
+      },
+      {
+        "id": "INIT.MH-12",
+        "text": "Rapid product changes. D02.MH-07; FR-001, FR-002, FR-026, FR-027. Effective-dated product and processing policy changes.",
+        "status": "baseline",
+        "source": "D04 §17"
+      },
+      {
+        "id": "INIT.MH-13",
+        "text": "Transaction visibility. D02.MH-08; FR-019, FR-025, FR-029 to FR-033. Traceable state and reporting.",
+        "status": "baseline",
+        "source": "D04 §17"
+      },
+      {
+        "id": "INIT.MH-14",
+        "text": "Digital value-added services. D02.MH-09; FR-009, FR-012, FR-034, FR-035. Independent integration and service expansion; actual proprietary service details remain unresolved.",
+        "status": "baseline",
+        "source": "D04 §17"
+      },
+      {
+        "id": "D02.BASE-01",
+        "text": "Integration and abstraction. D02.MH-01/02; FR-005 to FR-010, FR-034; NFR-004. Equivalent outcomes across transport mechanisms.",
+        "status": "baseline",
+        "source": "D04 §17"
+      },
+      {
+        "id": "D02.BASE-02",
+        "text": "Payment processing. D02.MH-03/04; FR-003, FR-010 to FR-019; NFR-001/002. Authority, execution and recovery.",
+        "status": "baseline",
+        "source": "D04 §17"
+      },
+      {
+        "id": "D02.BASE-03",
+        "text": "Financial correctness. D02.MH-05/06; FR-020 to FR-025; NFR-001/007. Matching and independent settlement evidence.",
+        "status": "baseline",
+        "source": "D04 §17"
+      },
+      {
+        "id": "D02.BASE-04",
+        "text": "Configurable operations. D02.MH-07; FR-026/027; NFR-003/007. Controlled activation and historical reproducibility.",
+        "status": "baseline",
+        "source": "D04 §17"
+      },
+      {
+        "id": "D02.BASE-05",
+        "text": "Insight and extensibility. D02.MH-08/09; FR-029 to FR-035; NFR-004/008. Traceable metrics and adapter extension.",
+        "status": "baseline",
+        "source": "D04 §17"
+      },
+      {
+        "id": "D02.EXT-01",
+        "text": "Enterprise delivery. FR-034/036; NFR-002/004. Import, parallel evaluation and controlled cutover.",
+        "status": "baseline",
+        "source": "D04 §17"
+      },
+      {
+        "id": "D02.EXT-02",
+        "text": "Engineering assurance. FR-029/037; NFR-001 to NFR-010. Evidence, replay, monitoring and performance.",
+        "status": "baseline",
+        "source": "D04 §17"
+      },
+      {
+        "id": "D02.EXT-03",
+        "text": "Financial intelligence. FR-038; optional, contingent on verified controls and data quality.",
+        "status": "baseline",
+        "source": "D04 §17"
+      },
+      {
+        "id": "D03.DOM-01",
+        "text": "Separate obligations, authority and attempts. FR-002, FR-005, FR-010, FR-011, FR-019; NFR-001. Verify domain ownership and negative authority cases.",
+        "status": "baseline",
+        "source": "D04 §17"
+      },
+      {
+        "id": "D03.DOM-02",
+        "text": "Distinct EFT debit, DebiCheck, RM and payroll. FR-011, FR-014 to FR-017. Independent channel contracts and tests.",
+        "status": "baseline",
+        "source": "D04 §17"
+      },
+      {
+        "id": "D03.DOM-03",
+        "text": "Approved credit payments and refunds. FR-003, FR-012, FR-018. Approval and refund limits.",
+        "status": "baseline",
+        "source": "D04 §17"
+      },
+      {
+        "id": "D03.DOM-04",
+        "text": "Distinct outcome, settlement and allocation. FR-019, FR-021, FR-024. Delayed and conflicting observations.",
+        "status": "baseline",
+        "source": "D04 §17"
+      },
+      {
+        "id": "D03.DOM-05",
+        "text": "Exact amounts and immutable balanced postings. FR-020; NFR-001. Constraints, reversals and replay.",
+        "status": "baseline",
+        "source": "D04 §17"
+      },
+      {
+        "id": "D03.DOM-06",
+        "text": "Three-way reconciliation, net settlement and partial receipts. FR-021 to FR-025. Reproducible control totals and exceptions.",
+        "status": "baseline",
+        "source": "D04 §17"
+      },
+      {
+        "id": "D03.DOM-07",
+        "text": "REST, messaging and SFTP. FR-005 to FR-010; NFR-004. End-to-end contract and batch tests.",
+        "status": "baseline",
+        "source": "D04 §17"
+      },
+      {
+        "id": "D03.DOM-08",
+        "text": "Tenant, account and approval boundaries. FR-011/012, FR-025, FR-028/029; NFR-003/011. Negative access and segregation tests.",
+        "status": "baseline",
+        "source": "D04 §17"
+      },
+      {
+        "id": "D03.DOM-09",
+        "text": "Controlled recovery from ambiguity. FR-010, FR-015, FR-019, FR-037; NFR-002/006. Lost acknowledgement and crash scenarios.",
+        "status": "baseline",
+        "source": "D04 §17"
+      },
+      {
+        "id": "D03.DOM-10",
+        "text": "Arrears and grace handling. FR-001/002/004. Policy lifecycle remains independent of a failed deduction.",
+        "status": "baseline",
+        "source": "D04 §17"
+      },
+      {
+        "id": "D03.DOM-11",
+        "text": "Analytical export and lineage. FR-029, FR-031 to FR-033; NFR-008. Source-to-report checks.",
+        "status": "baseline",
+        "source": "D04 §17"
+      },
+      {
+        "id": "D03.DOM-12",
+        "text": "Migration, extension and authorised rule changes. FR-026/027, FR-034 to FR-036; NFR-003/004. Simulation, cutover and rollback tests.",
+        "status": "baseline",
+        "source": "D04 §17"
+      }
+    ],
+    "moneyhub": [
+      {
+        "id": "D02.MH-01",
+        "text": "Financial and PAS integration. Connect to an existing policy administration system and financial environment. Interpret as separate inbound instructions and outbound financial results.",
+        "status": "baseline",
+        "source": "D02 §9"
+      },
+      {
+        "id": "D02.MH-02",
+        "text": "External interface abstraction. Absorb bank-interface changes outside client business logic. Interpret as replaceable protocol and payment-channel adapters.",
+        "status": "baseline",
+        "source": "D02 §9"
+      },
+      {
+        "id": "D02.MH-03",
+        "text": "Collections and disbursements. Manage inbound and outbound money movement. Interpret as separate instruction types with shared control and settlement mechanisms.",
+        "status": "baseline",
+        "source": "D02 §9"
+      },
+      {
+        "id": "D02.MH-04",
+        "text": "Mandates. Support payment authorisation management. Interpret as a distinct lifecycle with channel-specific validation.",
+        "status": "baseline",
+        "source": "D02 §9"
+      },
+      {
+        "id": "D02.MH-05",
+        "text": "Matching. Automate allocation of payments and cash deposits. Interpret as deterministic matching supported by controlled exception review.",
+        "status": "baseline",
+        "source": "D02 §9"
+      },
+      {
+        "id": "D02.MH-06",
+        "text": "Three-way reconciliation. Reconcile receipts and disbursements. The precise three sources and algorithms are not disclosed; define a defensible independent model.",
+        "status": "baseline",
+        "source": "D02 §9"
+      },
+      {
+        "id": "D02.MH-07",
+        "text": "Configurable automation and product change. Enable trigger-driven actions and changes to financial products. Interpret as versioned configuration with controlled activation.",
+        "status": "baseline",
+        "source": "D02 §9"
+      },
+      {
+        "id": "D02.MH-08",
+        "text": "Transaction insight and data usage. Make financial activity visible and useful for operational decisions. Interpret as traceable reporting and transaction-level inspection.",
+        "status": "baseline",
+        "source": "D02 §9"
+      },
+      {
+        "id": "D02.MH-09",
+        "text": "Digital value-added services. Accommodate additional services around payments. Specific integrations are unresolved; investigate an extensible adapter framework.\n\nThese groups will be expanded into atomic requirements in Document 04. A claim of full proprietary feature parity is not supported by the available public material.",
+        "status": "baseline",
+        "source": "D02 §9"
+      }
+    ],
+    "unknowns": [
+      {
+        "id": "U-01",
+        "text": "Sanlam implementation scope. Which business unit, systems and payment streams are included? Is the engagement a new implementation, integration extension or legacy migration?",
+        "status": "open",
+        "source": "D02 §22"
+      },
+      {
+        "id": "U-02",
+        "text": "Financial ownership. Does the client or MoneyHub own particular billing, mandate, settlement and ledger records? Which system is authoritative for each financial state?",
+        "status": "open",
+        "source": "D02 §22"
+      },
+      {
+        "id": "U-03",
+        "text": "Interfaces and topology. Which file schemas, transport methods, brokers, APIs, service boundaries and deployment models apply to the specific implementation?",
+        "status": "open",
+        "source": "D02 §22"
+      },
+      {
+        "id": "U-04",
+        "text": "Technology stack. What parts of the solution run on IRIS, Python or other platforms? Which databases and analytics tools are actually deployed?",
+        "status": "open",
+        "source": "D02 §22"
+      },
+      {
+        "id": "U-05",
+        "text": "Financial matching. What are the exact three reconciliation sources, matching rules, settlement calendars, treatment of fees and correction procedures?",
+        "status": "open",
+        "source": "D02 §22"
+      },
+      {
+        "id": "U-06",
+        "text": "Operational and compliance controls. What are the actual access boundaries, control procedures, throughput, recovery objectives, audit obligations and regulatory roles?",
+        "status": "open",
+        "source": "D02 §22"
+      },
+      {
+        "id": "U-07",
+        "text": "Intelligence. Which AI-related initiatives are operational and which remain exploratory? What evaluations support their use?",
+        "status": "open",
+        "source": "D02 §22"
+      }
+    ]
+  },
+  "source_definitions": {
+    "document_02": [
+      {
+        "id": "D02.BASE-01",
+        "text": "Integration and abstraction (D). MH-01 and MH-02. Demonstrate a representative PAS exchanging instructions and results through lab-owned contracts. Verify equivalent outcomes across API and file transports."
+      },
+      {
+        "id": "D02.BASE-02",
+        "text": "Payment processing (D/E). MH-03 and MH-04. Cover collections, disbursements, mandates and relevant bank and payroll channel workflows. Verify repeated and ambiguous submissions, authorisation changes and failed transactions."
+      },
+      {
+        "id": "D02.BASE-03",
+        "text": "Financial correctness (D/I). MH-05 and MH-06. Implement payment matching and an independent three-source reconciliation model. Verify unmatched cash, partial allocation, duplicate settlement data and reversal handling."
+      },
+      {
+        "id": "D02.BASE-04",
+        "text": "Configurable operations (D). MH-07. Implement controlled, versioned automation and rules. Verify effective-date changes, historical reproducibility and prevention of unauthorised processing."
+      },
+      {
+        "id": "D02.BASE-05",
+        "text": "Insight and extensibility (D/P). MH-08 and MH-09. Demonstrate transaction inspection, financial reporting, analytical lineage and addition of an adapter without altering unrelated core logic."
+      },
+      {
+        "id": "D02.EXT-01",
+        "text": "Enterprise delivery (P). Investigate onboarding, legacy data import, shadow processing, controlled cutover and recovery. Compare actual results without executing duplicate payments."
+      },
+      {
+        "id": "D02.EXT-02",
+        "text": "Engineering assurance (P). Investigate trace exports, replay, integration certification, observability and performance under controlled workloads."
+      },
+      {
+        "id": "D02.EXT-03",
+        "text": "Financial intelligence (P). Assess AI or machine learning only after deterministic controls and data quality have passed verification."
+      }
+    ],
+    "document_03": [
+      {
+        "id": "D03.DOM-01",
+        "text": "Separate PAS obligations, mandate authority and execution attempts.",
+        "acceptance": "Billing and execution contracts; invalid authority rejected."
+      },
+      {
+        "id": "D03.DOM-02",
+        "text": "Represent EFT debit, DebiCheck, RM and payroll independently.",
+        "acceptance": "Channel-specific simulator and negative tests."
+      },
+      {
+        "id": "D03.DOM-03",
+        "text": "Process credit payments and refunds against approved payable records.",
+        "acceptance": "Approval, duplicate and refund-limit tests."
+      },
+      {
+        "id": "D03.DOM-04",
+        "text": "Maintain distinct outcome, settlement and allocation states.",
+        "acceptance": "Delayed and conflicting event scenarios."
+      },
+      {
+        "id": "D03.DOM-05",
+        "text": "Preserve exact amounts and balanced immutable postings.",
+        "acceptance": "Constraint, reversal and replay tests."
+      },
+      {
+        "id": "D03.DOM-06",
+        "text": "Perform three-way reconciliation, including net settlement and partial receipts.",
+        "acceptance": "Reproducible control totals and exception evidence."
+      },
+      {
+        "id": "D03.DOM-07",
+        "text": "Support REST, durable messaging and working SFTP exchange.",
+        "acceptance": "Contract tests and end-to-end batch results."
+      },
+      {
+        "id": "D03.DOM-08",
+        "text": "Protect tenant, account and approval boundaries.",
+        "acceptance": "Negative authorisation and isolation tests."
+      },
+      {
+        "id": "D03.DOM-09",
+        "text": "Implement controlled recovery from ambiguous external results.",
+        "acceptance": "Crash and lost-acknowledgement verification."
+      },
+      {
+        "id": "D03.DOM-10",
+        "text": "Model policy arrears and grace handling without automatic lapse on failure.",
+        "acceptance": "PAS lifecycle and late-allocation scenarios."
+      },
+      {
+        "id": "D03.DOM-11",
+        "text": "Export verified data to analytical layers and report metric lineage.",
+        "acceptance": "Source-to-report reconciliation and freshness checks."
+      },
+      {
+        "id": "D03.DOM-12",
+        "text": "Support migration, extension and authorised rule changes.",
+        "acceptance": "Shadow run, rollback and configuration version tests."
+      }
+    ]
+  }
+}

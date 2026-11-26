@@ -1,0 +1,41 @@
+# Local Python and JavaScript tooling
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.hypothesis/
+.mypy_cache/
+.ruff_cache/
+node_modules/
+dist/
+build/
+.vite/
+coverage/
+.coverage*
+htmlcov/
+playwright-report/
+test-results/
+
+# Local settings, credentials and state
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.sqlite
+*.sqlite3
+*.db
+.idea/
+.vscode/
+.DS_Store
+
+# Generated local data and verification output
+/.local/
+/.var/
+/.local-data/
+/evidence/m00/runs/
+*.tmp
+*.log

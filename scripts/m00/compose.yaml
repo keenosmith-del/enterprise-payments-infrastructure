@@ -1,0 +1,26 @@
+# Disposable M00 services. Pass distinct randomly generated passwords.
+services:
+  postgres:
+    image: postgres:17-bookworm
+    environment:
+      POSTGRES_USER: epi_probe
+      POSTGRES_PASSWORD: ${EPI_M00_POSTGRES_PASSWORD:?Required}
+    ports:
+      - "127.0.0.1:55432:5432"
+    healthcheck:
+      test: [CMD, pg_isready, -h, 127.0.0.1, -U, epi_probe]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+  rabbitmq:
+    image: rabbitmq:4.2
+    environment:
+      RABBITMQ_DEFAULT_USER: epi_probe
+      RABBITMQ_DEFAULT_PASS: ${EPI_M00_AMQP_PASSWORD:?Required}
+    ports:
+      - "127.0.0.1:55672:5672"
+    healthcheck:
+      test: [CMD, rabbitmq-diagnostics, -q, ping]
+      interval: 3s
+      timeout: 5s
+      retries: 20
