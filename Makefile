@@ -1,27 +1,39 @@
 SHELL := /bin/bash
 COMPOSE := docker compose --env-file .local/epi.env
-.PHONY: bootstrap up down migrate seed test lint typecheck build verify status logs
-bootstrap:
+PYTHON := .venv/bin/python
+.PHONY: credentials bootstrap up down migrate seed test lint typecheck build verify status logs
+credentials:
 	python3 scripts/m01/create_env.py
-up: bootstrap
+bootstrap: credentials
+	python3 -c 'import sys; assert sys.version_info >= (3,14), "Python 3.14 or newer is required"'
+	node -e 'if (+process.versions.node.split(".")[0] < 24) throw Error("Node 24 or newer is required")'
+	python3 -m venv .venv
+	$(PYTHON) -m pip install --require-hashes -r requirements.lock
+	npm ci
+up: credentials
 	$(COMPOSE) up -d --build --wait
 down:
 	$(COMPOSE) down
-migrate:
+migrate: credentials
 	$(COMPOSE) run --rm database-setup
 seed: migrate
 status:
 	$(COMPOSE) ps
 logs:
 	$(COMPOSE) logs --tail=100
-build: bootstrap
+build: credentials
 	$(COMPOSE) build
 lint:
-	ruff check packages scripts/m01 tests/unit
+	.venv/bin/ruff check packages scripts/m01 tests/unit services
+
 typecheck:
-	mypy packages/epi_foundation tests/unit
+	.venv/bin/mypy packages/epi_foundation tests/unit
+
 test:
-	python -m pytest tests/unit -q
+	$(PYTHON) -m pytest tests/unit -q
+
 verify: lint typecheck test
+	$(PYTHON) scripts/validate_baseline.py
+	npm audit --audit-level=moderate
 	npm run typecheck
 	npm run build
