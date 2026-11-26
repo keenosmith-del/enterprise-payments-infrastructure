@@ -9,4 +9,10 @@ services:
         source: ../../.local/sftp/input
         target: /probe-keys-input
         read_only: true
+      - sftp_partner_a:/srv/sftp/partner_a/inbox
+      - sftp_partner_b:/srv/sftp/partner_b/inbox
     restart: unless-stopped
+
+volumes:
+  sftp_partner_a:
+  sftp_partner_b:
