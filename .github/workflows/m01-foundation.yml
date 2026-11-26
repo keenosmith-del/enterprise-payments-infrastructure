@@ -198,7 +198,7 @@ jobs:
           docker compose --env-file .local/epi.env run --rm rabbitmq-setup
           python -m pytest tests/integration/test_rabbit_permissions.py -v
           python scripts/m01/publish_probe.py
-          message="$(docker compose --env-file .local/epi.env --profile integration run --rm enterprise-integration)"
+          message="$(docker compose --env-file .local/epi.env --profile integration run --rm -T --no-deps enterprise-integration | tr -d '\r')"
           test "$message" = synthetic-technical-probe
           for attempt in $(seq 1 10); do
             if scripts/m01/probe_dev_sftp.sh; then break; fi
