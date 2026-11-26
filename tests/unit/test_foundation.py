@@ -43,3 +43,10 @@ def test_unconfigured_identity_fails_closed() -> None:
     client = TestClient(create_app("test", Settings(database_url="")))
     response = client.get("/tenants/10000000-0000-4000-8000-000000000001/legal-entities", headers={"Authorization": "Bearer untrusted"})
     assert response.status_code == 503
+
+
+def test_metrics_reflect_real_request() -> None:
+    with TestClient(create_app("test", Settings(database_url=""))) as client:
+        client.get("/health/live")
+        response = client.get("/metrics")
+        assert 'epi_http_requests_total{method="GET",status="200"} 1.0' in response.text

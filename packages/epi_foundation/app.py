@@ -16,6 +16,9 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from fastapi import Depends
 from fastapi.responses import JSONResponse
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from prometheus_client import CollectorRegistry, Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.trace import TracerProvider
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import SQLAlchemyError
@@ -37,6 +40,11 @@ class Settings(BaseSettings):
 def create_app(name: str, settings: Settings | None = None) -> FastAPI:
     config = settings or Settings()
     logger = logging.getLogger("epi.request")
+    registry = CollectorRegistry()
+    request_count = Counter("epi_http_requests_total", "HTTP requests", ["method", "status"], registry=registry)
+    duration = Histogram("epi_http_request_duration_seconds", "HTTP request duration", registry=registry)
+    provider = TracerProvider(resource=Resource.create({"service.name": name, "deployment.environment.name": config.environment}))
+    tracer = provider.get_tracer("epi.foundation")
     verifier = (OIDCVerifier(config.oidc_issuer, config.oidc_audience, config.oidc_jwks_url)
                 if config.oidc_issuer and config.oidc_audience and config.oidc_jwks_url else None)
     bearer = HTTPBearer(auto_error=False)
@@ -59,6 +67,7 @@ def create_app(name: str, settings: Settings | None = None) -> FastAPI:
         yield
         if engine is not None:
             engine.dispose()
+        provider.shutdown()
 
     app = FastAPI(title=name, docs_url="/docs" if config.environment == "development" else None,
                   redoc_url=None, lifespan=lifespan)
@@ -73,13 +82,19 @@ def create_app(name: str, settings: Settings | None = None) -> FastAPI:
             correlation_id = request_id
         request.state.request_id = request_id
         request.state.correlation_id = correlation_id
-        response = await call_next(request)
+        with tracer.start_as_current_span("http.request") as span:
+            span.set_attribute("http.request.method", request.method)
+            response = await call_next(request)
+            span.set_attribute("http.response.status_code", response.status_code)
+        elapsed = time.monotonic() - started
+        request_count.labels(request.method, str(response.status_code)).inc()
+        duration.observe(elapsed)
         response.headers["X-Request-ID"] = request_id
         response.headers["X-Correlation-ID"] = correlation_id
         logger.info(json.dumps({"application": name, "environment": config.environment,
                                "request_id": request_id, "correlation_id": correlation_id,
                                "method": request.method, "status": response.status_code,
-                               "duration_ms": round((time.monotonic() - started) * 1000, 2)}))
+                               "duration_ms": round(elapsed * 1000, 2)}))
         return response
 
     @app.exception_handler(HTTPException)
@@ -130,6 +145,10 @@ def create_app(name: str, settings: Settings | None = None) -> FastAPI:
                 return {"items": [{"id": str(row.id), "name": row.name} for row in rows]}
         except SQLAlchemyError:
             raise HTTPException(status_code=503, detail="Database unavailable") from None
+
+    @app.get("/metrics", include_in_schema=False)
+    def metrics() -> Response:
+        return Response(content=generate_latest(registry), media_type=CONTENT_TYPE_LATEST)
 
     @app.get("/info")
     def info() -> dict[str, str]:

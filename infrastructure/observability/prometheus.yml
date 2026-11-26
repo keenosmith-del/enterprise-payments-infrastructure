@@ -1,0 +1,10 @@
+global:
+  scrape_interval: 15s
+scrape_configs:
+  - job_name: epi-foundation
+    static_configs:
+      - targets:
+          - policy-administration-backend:8000
+          - payments-hub-backend:8000
+          - banking-simulator-backend:8000
+          - payroll-simulator-backend:8000

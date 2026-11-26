@@ -177,5 +177,76 @@ services:
       payroll-simulator-backend: { condition: service_healthy }
     ports:
       - "127.0.0.1:5176:8080"
+  rabbitmq:
+    profiles: [messaging]
+    image: rabbitmq:4.1-management
+    environment:
+      RABBITMQ_DEFAULT_USER: ${EPI_RABBIT_ADMIN:?generate local credentials}
+      RABBITMQ_DEFAULT_PASS: ${EPI_RABBIT_ADMIN_PASSWORD:?generate local credentials}
+    ports:
+      - "127.0.0.1:5672:5672"
+      - "127.0.0.1:15672:15672"
+    volumes:
+      - rabbit_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+  rabbitmq-setup:
+    profiles: [messaging]
+    build:
+      context: .
+      dockerfile: infrastructure/docker/backend.Dockerfile
+      args: { APP_NAME: payments-hub }
+    command: ["python", "scripts/m01/bootstrap_rabbitmq.py"]
+    environment:
+      EPI_RABBIT_MANAGEMENT_URL: http://rabbitmq:15672/api
+      EPI_RABBIT_ADMIN: ${EPI_RABBIT_ADMIN:?generate local credentials}
+      EPI_RABBIT_ADMIN_PASSWORD: ${EPI_RABBIT_ADMIN_PASSWORD:?generate local credentials}
+      EPI_RABBIT_POLICY_ADMINISTRATION_PASSWORD: ${EPI_RABBIT_POLICY_ADMINISTRATION_PASSWORD:?generate local credentials}
+      EPI_RABBIT_PAYMENTS_HUB_PASSWORD: ${EPI_RABBIT_PAYMENTS_HUB_PASSWORD:?generate local credentials}
+      EPI_RABBIT_BANKING_SIMULATOR_PASSWORD: ${EPI_RABBIT_BANKING_SIMULATOR_PASSWORD:?generate local credentials}
+      EPI_RABBIT_PAYROLL_SIMULATOR_PASSWORD: ${EPI_RABBIT_PAYROLL_SIMULATOR_PASSWORD:?generate local credentials}
+      EPI_RABBIT_INTEGRATION_PASSWORD: ${EPI_RABBIT_INTEGRATION_PASSWORD:?generate local credentials}
+    depends_on:
+      rabbitmq: { condition: service_healthy }
+  sftp:
+    profiles: [sftp]
+    build:
+      context: ./scripts/m00/sftp
+    ports:
+      - "127.0.0.1:2222:22"
+    volumes:
+      - type: bind
+        source: ./.local/sftp/input
+        target: /probe-keys-input
+        read_only: true
+  data-engineering:
+    profiles: [analytics]
+    build:
+      context: .
+      dockerfile: infrastructure/docker/backend.Dockerfile
+      args: { APP_NAME: payments-hub }
+    command: ["python", "services/data-engineering/technical_smoke.py"]
+  prometheus:
+    profiles: [observability]
+    image: prom/prometheus:v3.5.0
+    volumes:
+      - ./infrastructure/observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "127.0.0.1:9090:9090"
+  grafana:
+    profiles: [observability]
+    image: grafana/grafana:12.1.1
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${EPI_GRAFANA_PASSWORD:?generate local credentials}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
 volumes:
   postgres_data:
+  grafana_data:
+  rabbit_data:

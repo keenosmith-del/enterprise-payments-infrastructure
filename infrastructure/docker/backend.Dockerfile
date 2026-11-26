@@ -6,6 +6,7 @@ RUN pip install --no-cache-dir --require-hashes -r requirements.lock && useradd 
 COPY packages /app/packages
 COPY apps /app/apps
 COPY scripts/m01 /app/scripts/m01
+COPY services /app/services
 USER epi
 ARG APP_NAME
 ENV EPI_APP_NAME=${APP_NAME}

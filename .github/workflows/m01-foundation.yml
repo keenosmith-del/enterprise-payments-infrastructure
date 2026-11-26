@@ -184,11 +184,23 @@ jobs:
           echo "::add-mask::$EPI_KEYCLOAK_USER_PASSWORD"
           python -m pytest tests/integration/test_stack_authorization.py -v
           npx playwright test tests/browser --workers=1
+          scripts/m01/create_sftp_keys.sh
+          docker compose --env-file .local/epi.env --profile messaging --profile sftp --profile observability up -d --build --wait rabbitmq rabbitmq-setup sftp prometheus grafana
+          python -m pytest tests/integration/test_rabbit_permissions.py -v
+          for attempt in $(seq 1 10); do
+            if scripts/m01/probe_dev_sftp.sh; then break; fi
+            if [[ "$attempt" == 10 ]]; then exit 1; fi
+            sleep 2
+          done
+          docker compose --env-file .local/epi.env --profile analytics run --rm data-engineering
+          curl --retry 15 --retry-delay 2 --retry-all-errors -fsS http://127.0.0.1:9090/-/ready > /dev/null
+          curl --retry 15 --retry-delay 2 --retry-all-errors -fsS http://127.0.0.1:3000/api/health > /dev/null
           docker compose --env-file .local/epi.env restart postgres
           docker compose --env-file .local/epi.env up -d --wait
           for port in 8001 8002 8003 8004; do
             curl --retry 15 --retry-delay 2 --retry-all-errors -fsS "http://127.0.0.1:$port/health/ready" > /dev/null
           done
+          python -m pytest tests/integration/test_stack_authorization.py -v
       - name: Cleanup
         if: always()
         run: |
