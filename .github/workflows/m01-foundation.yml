@@ -143,6 +143,8 @@ jobs:
           export EPI_KEYCLOAK_ADMIN_PASSWORD="$(openssl rand -hex 24)"
           export EPI_KEYCLOAK_USER_PASSWORD="$(openssl rand -hex 24)"
           export EPI_KEYCLOAK_SERVICE_SECRET="$(openssl rand -hex 24)"
+          export EPI_KEYCLOAK_LIMITED_PASSWORD="$(openssl rand -hex 24)"
+          echo "::add-mask::$EPI_KEYCLOAK_LIMITED_PASSWORD"
           echo "::add-mask::$EPI_KEYCLOAK_SERVICE_SECRET"
           echo "::add-mask::$EPI_KEYCLOAK_ADMIN_PASSWORD"
           echo "::add-mask::$EPI_KEYCLOAK_USER_PASSWORD"
@@ -185,6 +187,7 @@ jobs:
           set +a
           echo "::add-mask::$EPI_KEYCLOAK_USER_PASSWORD"
           echo "::add-mask::$EPI_KEYCLOAK_SERVICE_SECRET"
+          echo "::add-mask::$EPI_KEYCLOAK_LIMITED_PASSWORD"
           python -m pytest tests/integration/test_stack_authorization.py -v
           npx playwright test tests/browser --workers=1
           scripts/m01/create_sftp_keys.sh

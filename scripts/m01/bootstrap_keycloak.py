@@ -82,6 +82,10 @@ def bootstrap() -> None:
             "firstName": "Synthetic", "lastName": "User", "email": "synthetic@example.invalid",
             "attributes": {"tenant_ids": ["10000000-0000-4000-8000-000000000001"]},
             "credentials": [{"type": "password", "value": os.environ["EPI_KEYCLOAK_USER_PASSWORD"], "temporary": False}]}, admin)
+    request(root + "/users", {"username": "synthetic-limited", "enabled": True, "emailVerified": True,
+            "firstName": "Synthetic", "lastName": "Limited", "email": "limited@example.invalid",
+            "attributes": {"tenant_ids": ["10000000-0000-4000-8000-000000000001"]},
+            "credentials": [{"type": "password", "value": os.environ["EPI_KEYCLOAK_LIMITED_PASSWORD"], "temporary": False}]}, admin)
     users = request(root + "/users?username=synthetic-user&exact=true", token=admin, method="GET")
     role = request(root + "/roles/foundation-reader", token=admin, method="GET")
     request(root + f"/users/{users[0]['id']}/role-mappings/realm", [role], admin)

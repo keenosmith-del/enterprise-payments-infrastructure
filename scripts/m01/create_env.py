@@ -8,7 +8,7 @@ path = Path(".local/epi.env")
 path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
 values = {"EPI_POSTGRES_ADMIN_PASSWORD": secrets.token_hex(24),
           "EPI_KEYCLOAK_ADMIN": "epi_admin", "EPI_KEYCLOAK_ADMIN_PASSWORD": secrets.token_hex(24),
-          "EPI_KEYCLOAK_USER_PASSWORD": secrets.token_hex(24), "EPI_KEYCLOAK_SERVICE_SECRET": secrets.token_hex(24), "EPI_RABBIT_ADMIN": "epi_admin",
+          "EPI_KEYCLOAK_USER_PASSWORD": secrets.token_hex(24), "EPI_KEYCLOAK_LIMITED_PASSWORD": secrets.token_hex(24), "EPI_KEYCLOAK_SERVICE_SECRET": secrets.token_hex(24), "EPI_RABBIT_ADMIN": "epi_admin",
           "EPI_RABBIT_ADMIN_PASSWORD": secrets.token_hex(24), "EPI_GRAFANA_PASSWORD": secrets.token_hex(24)}
 for app in APPS:
     for role in ("MIGRATION", "RUNTIME"):

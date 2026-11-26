@@ -32,6 +32,8 @@ def test_authenticated_tenant_boundary(app, port):
     assert status == 200
     assert [item["name"] for item in data["items"]] == ["Synthetic Entity A"]
     assert get(port, f"/tenants/{TENANT_B}/legal-entities", access)[0] == 403
+    limited = token("synthetic-limited", os.environ["EPI_KEYCLOAK_LIMITED_PASSWORD"], app, "epi")
+    assert get(port, f"/tenants/{TENANT_A}/legal-entities", limited)[0] == 403
     wrong = token("synthetic-user", os.environ["EPI_KEYCLOAK_USER_PASSWORD"], ("payments-hub" if app != "payments-hub" else "policy-administration"), "epi")
     assert get(port, f"/tenants/{TENANT_A}/legal-entities", wrong)[0] == 401
 
