@@ -9,7 +9,7 @@ import pytest
 
 def connect(user: str):
     return pika.BlockingConnection(pika.ConnectionParameters(
-        host="127.0.0.1", port=5672, virtual_host="epi-development",
+        host="127.0.0.1", port=int(os.getenv("EPI_RABBIT_PORT", "5672")), virtual_host="epi-development",
         credentials=pika.PlainCredentials(user, os.environ[f"EPI_RABBIT_{user.upper()}_PASSWORD"])))
 
 
