@@ -22,7 +22,11 @@ def request(path: str, data: dict | None = None, token: str = "", method: str = 
     except urllib.error.HTTPError as error:
         if error.code == 409 and method == "POST":
             return None
-        raise RuntimeError(f"Identity provisioning failed: HTTP {error.code} at {path}") from None
+        try:
+            detail = json.loads(error.read()).get("error", "unknown")
+        except (ValueError, AttributeError):
+            detail = "unknown"
+        raise RuntimeError(f"Identity request failed: HTTP {error.code}, error={detail}, path={path}") from None
 
 
 def token(username: str, password: str, client: str = "admin-cli", realm: str = "master") -> str:
@@ -60,6 +64,7 @@ def bootstrap() -> None:
         clients = request(root + "/clients?" + urllib.parse.urlencode({"clientId": app}), token=admin, method="GET")
         request(root + f"/clients/{clients[0]['id']}/default-client-scopes/{scope_id}", {}, admin, method="PUT")
     request(root + "/users", {"username": "synthetic-user", "enabled": True, "emailVerified": True,
+            "firstName": "Synthetic", "lastName": "User", "email": "synthetic@example.invalid",
             "attributes": {"tenant_ids": ["10000000-0000-4000-8000-000000000001"]},
             "credentials": [{"type": "password", "value": os.environ["EPI_KEYCLOAK_USER_PASSWORD"], "temporary": False}]}, admin)
     users = request(root + "/users?username=synthetic-user&exact=true", token=admin, method="GET")
