@@ -47,7 +47,7 @@ jobs:
         run: |
           password="$(openssl rand -hex 24)"
           echo "::add-mask::$password"
-          docker run -d --name epi-m01-pg -e POSTGRES_PASSWORD="$password" -p 127.0.0.1:55433:5432 postgres:17
+          docker run -d --name epi-m01-pg -e POSTGRES_PASSWORD="$password" -p 127.0.0.1:55433:5432 postgres:17@sha256:87c8b42f423b45d5247e6aa8fdb2e7762fec164c68a50fe3eb07e7bfcaf4dbcf
           for attempt in $(seq 1 30); do
             if docker exec epi-m01-pg pg_isready -U postgres; then break; fi
             sleep 1
@@ -76,7 +76,7 @@ jobs:
         run: |
           password="$(openssl rand -hex 24)"
           echo "::add-mask::$password"
-          docker run -d --name epi-m01-boundaries -e POSTGRES_PASSWORD="$password" -p 127.0.0.1:55433:5432 postgres:17
+          docker run -d --name epi-m01-boundaries -e POSTGRES_PASSWORD="$password" -p 127.0.0.1:55433:5432 postgres:17@sha256:87c8b42f423b45d5247e6aa8fdb2e7762fec164c68a50fe3eb07e7bfcaf4dbcf
           for attempt in $(seq 1 30); do
             if docker exec epi-m01-boundaries pg_isready -U postgres; then break; fi
             sleep 1

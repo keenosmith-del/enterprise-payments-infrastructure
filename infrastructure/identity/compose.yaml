@@ -1,6 +1,6 @@
 services:
   keycloak:
-    image: quay.io/keycloak/keycloak:26.3.5
+    image: quay.io/keycloak/keycloak:26.3.5@sha256:357829ec7c4693397533035092ad13b0644bcc95ded311f33a3738c4d9e9bdba
     command: ["start-dev", "--health-enabled=true"]
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: "${EPI_KEYCLOAK_ADMIN:?set EPI_KEYCLOAK_ADMIN}"

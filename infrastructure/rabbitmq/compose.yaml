@@ -1,6 +1,6 @@
 services:
   rabbitmq:
-    image: rabbitmq:4.1-management
+    image: rabbitmq:4.1-management@sha256:abcf6bc2eb4ff990bf041e605c485938739c5c98c513e0bc30a0ae9d0664be45
     environment:
       RABBITMQ_DEFAULT_USER: "${EPI_RABBIT_ADMIN:?set EPI_RABBIT_ADMIN}"
       RABBITMQ_DEFAULT_PASS: "${EPI_RABBIT_ADMIN_PASSWORD:?set EPI_RABBIT_ADMIN_PASSWORD}"
