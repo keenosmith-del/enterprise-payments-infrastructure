@@ -14,6 +14,7 @@ from uuid import UUID
 from alembic.config import Config
 from alembic.script import ScriptDirectory
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from fastapi import Depends
 from fastapi.responses import JSONResponse
@@ -26,6 +27,7 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.exc import SQLAlchemyError
 from starlette.middleware.base import RequestResponseEndpoint
 from starlette.responses import Response
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from packages.epi_foundation.identity import OIDCVerifier, Principal
 
@@ -42,6 +44,12 @@ class Settings(BaseSettings):
 def create_app(name: str, settings: Settings | None = None) -> FastAPI:
     config = settings or Settings()
     logger = logging.getLogger("epi.request")
+    if not logger.handlers:
+        handler = logging.StreamHandler()
+        handler.setFormatter(logging.Formatter("%(message)s"))
+        logger.addHandler(handler)
+    logger.setLevel(logging.INFO)
+    logger.propagate = False
     registry = CollectorRegistry()
     request_count = Counter("epi_http_requests_total", "HTTP requests", ["method", "status"], registry=registry)
     duration = Histogram("epi_http_request_duration_seconds", "HTTP request duration", registry=registry)
@@ -56,7 +64,7 @@ def create_app(name: str, settings: Settings | None = None) -> FastAPI:
             engine = create_engine(config.database_url, pool_pre_ping=True,
                                    connect_args={"connect_timeout": 3})
         except (SQLAlchemyError, ValueError, ImportError):
-            logger.error("database configuration invalid")
+            logger.error(json.dumps({"application": name, "category": "configuration_error"}))
     slug = name.lower().replace(" ", "-")
     alembic_ini = Path(__file__).resolve().parents[2] / "apps" / slug / "backend" / "alembic.ini"
     try:
@@ -101,10 +109,23 @@ def create_app(name: str, settings: Settings | None = None) -> FastAPI:
                                "duration_ms": round(elapsed * 1000, 2)}))
         return response
 
-    @app.exception_handler(HTTPException)
-    async def technical_error(request: Request, exc: HTTPException) -> JSONResponse:
+    @app.exception_handler(StarletteHTTPException)
+    async def technical_error(request: Request, exc: StarletteHTTPException) -> JSONResponse:
         return JSONResponse(status_code=exc.status_code, content={"error": "request_failed",
                             "request_id": request.state.request_id}, headers=exc.headers)
+
+    @app.exception_handler(RequestValidationError)
+    async def invalid_request(request: Request, _exc: RequestValidationError) -> JSONResponse:
+        return JSONResponse(status_code=422, content={"error": "invalid_request",
+                            "request_id": request.state.request_id})
+
+    @app.exception_handler(Exception)
+    async def internal_error(request: Request, _exc: Exception) -> JSONResponse:
+        logger.error(json.dumps({"application": name, "environment": config.environment,
+                                 "request_id": getattr(request.state, "request_id", "unknown"),
+                                 "category": "internal_error"}))
+        return JSONResponse(status_code=500, content={"error": "internal_error",
+                            "request_id": getattr(request.state, "request_id", "unknown")})
 
     @app.get("/health/live")
     def live() -> dict[str, str]:

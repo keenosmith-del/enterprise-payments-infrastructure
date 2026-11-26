@@ -66,3 +66,20 @@ def test_trace_instrumentation_omits_request_secrets(caplog) -> None:
     assert spans[0].name == "http.request"
     assert "private-value" not in str(spans[0].attributes)
     assert "private-value" not in caplog.text
+
+
+def test_validation_and_not_found_have_safe_error_envelopes() -> None:
+    from uuid import UUID
+
+    app = create_app("test", Settings(database_url=""))
+
+    @app.get("/validation-probe/{item}")
+    def validation_probe(item: UUID) -> dict[str, str]:
+        return {"item": str(item)}
+
+    client = TestClient(app)
+    response = client.get("/validation-probe/not-a-uuid")
+    assert response.status_code == 422
+    assert response.json()["error"] == "invalid_request"
+    assert response.json()["request_id"] == response.headers["X-Request-ID"]
+    assert client.get("/not-found").json()["error"] == "request_failed"
