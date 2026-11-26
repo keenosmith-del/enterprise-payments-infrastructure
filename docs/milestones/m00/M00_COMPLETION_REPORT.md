@@ -45,3 +45,7 @@ The [M01 preparation](M00_M01_IMPLEMENTATION_PREPARATION.md) describes the appli
 ## 11. Final delivery status
 
 The M00 verification workflow passed on the correction commit. This report update follows that run and triggers a fresh workflow on its own commit. Formal design and finance reviews and maintainer acceptance remain open; M01 requires separate authorisation. No M01 implementation was started. No application migrations or production deployment were performed.
+
+## 12. Subsequent maintainer decision
+
+The maintainer accepted M00 as the architectural and engineering baseline for M01 foundation implementation and explicitly authorized M01. Financial policy decisions remain open for their dependent milestones. The status above records the verification and approval state at the time of that report.

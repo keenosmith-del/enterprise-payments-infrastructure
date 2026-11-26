@@ -234,6 +234,7 @@ jobs:
             curl --retry 15 --retry-delay 2 --retry-all-errors -fsS "http://127.0.0.1:$port/health/ready" > /dev/null
           done
           python -m pytest tests/integration/test_stack_authorization.py -v
+          make verify
       - name: Cleanup
         if: always()
         run: |

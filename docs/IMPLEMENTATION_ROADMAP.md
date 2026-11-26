@@ -4,7 +4,7 @@ Baseline: EPI 0.1.0 | 26 November 2026 | Discovery documents approved; engineeri
 
 ## 1. Delivery rules
 
-Source: Document 04 section 20. Preserve M00-M23 and their original gates. All milestones are NOT STARTED except M00 preparation (this bundle). Discovery and project name approved; M00 not passed. Dependency order is sequential by default; parallel documentation or isolated probes may proceed only where no unresolved dependency exists. No feature code before its specification; no simulated dispatch before M02, M04-M06 and applicable authority, accounting and independent evidence gates. All milestone PRs require scope, explicit requirement IDs, test plan, actual verification, migration/recovery implications, evidence and approval before merging. Financial and security controls are continuous.
+Source: Document 04 section 20. Preserve M00-M23 and their original gates. At the original baseline all milestones were unstarted and M00 was in preparation. The current execution status appears in the M01 foundation update below. Dependency order is sequential by default; parallel documentation or isolated probes may proceed only where no unresolved dependency exists. No feature code before its specification; no simulated dispatch before M02, M04-M06 and applicable authority, accounting and independent evidence gates. All milestone PRs require scope, explicit requirement IDs, test plan, actual verification, migration/recovery implications, evidence and approval before merging. Financial and security controls are continuous.
 
 ## 2. Original milestone catalogue
 
@@ -12,13 +12,13 @@ Source: Document 04 section 20. Preserve M00-M23 and their original gates. All m
 
 Discovery and design baseline. Approve Documents 01 to 04 with recorded gaps, establish the requirements, assumptions and decision registers, finalise the detailed architecture and financial contracts necessary for the initial slice. Gate: traceability crosswalk reviewed; unresolved decisions have an owner and approval condition.
 
-Status: IN PREPARATION; no gate pass recorded.
+Status: ACCEPTED for M01 foundation implementation by the maintainer.
 
 ### M01
 
 Foundation. Create repository boundaries, pinned dependencies, local Compose environment, CI, separate databases, identity skeleton and test fixtures. Gate: clean build, migration, seed, smoke tests and verified separation of service credentials.
 
-Status: NOT STARTED. Dependency: M00 accepted, unless a documented dependency review approves independent work.
+Status: IN PROGRESS. Dependency: M00 accepted. Final M01 acceptance depends on the recorded verification and maintainer review.
 
 ### M02
 
@@ -171,4 +171,8 @@ Milestone ID and title; baseline revision; authorised scope; explicit exclusions
 
 ## 6. M00 execution status
 
-The [M00 completion report](milestones/m00/M00_COMPLETION_REPORT.md) records blocked release acceptance and outstanding infrastructure verification. The [M01 preparation](milestones/m00/M00_M01_IMPLEMENTATION_PREPARATION.md) records foundation sequencing and proof obligations. M01 implementation remains pending separate authorisation after M00 acceptance.
+The [M00 completion report](milestones/m00/M00_COMPLETION_REPORT.md) records historical local blockers and subsequent hosted verification. The maintainer accepted M00 for foundation implementation and authorized M01. The [M01 preparation](milestones/m00/M00_M01_IMPLEMENTATION_PREPARATION.md) records foundation sequencing and proof obligations.
+
+## 7. M01 foundation execution
+
+The maintainer accepted M00 for M01 on 26 November 2026. M01 implementation and evidence are recorded in the [M01 report](milestones/m01/M01_IMPLEMENTATION_REPORT.md) and [completion report](milestones/m01/M01_COMPLETION_REPORT.md). M02 remains unstarted and requires explicit authorization. Financial policy choices concerning fees, rounding, control accounts, settlement adjustments and accounting periods remain gates for their dependent work.

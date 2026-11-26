@@ -136,3 +136,7 @@ Every new specification identifies its source baseline, predecessor, owner, revi
 - V02-T17: [technology selection](milestones/m00/M00_TECHNOLOGY_SELECTION.md) and [host findings](milestones/m00/M00_DEVELOPMENT_ENVIRONMENT.md) record candidate choices and execution evidence.
 - V03-T18 and V03-T19: [M01 preparation](milestones/m00/M00_M01_IMPLEMENTATION_PREPARATION.md) and [architecture verification](milestones/m00/M00_ARCHITECTURE_VERIFICATION.md) describe release sequencing and probe coverage.
 - The [completion report](milestones/m00/M00_COMPLETION_REPORT.md) records gate status. These are repository specifications for review and preserve the formal volume and document numbering plan.
+
+## M01 foundation update
+
+The M01 implementation, infrastructure, database, identity, developer, verification and completion records are maintained under `docs/milestones/m01/`. They support the original Volume 02 and Volume 03 topics without changing the five-volume programme.

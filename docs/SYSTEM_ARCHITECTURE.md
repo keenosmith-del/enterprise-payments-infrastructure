@@ -160,3 +160,7 @@ These are proposed paths, not existing software. Each application has own migrat
 ## 11. Design prerequisites
 
 Before M02, approve domain identity, exact monetary and posting primitives, version transitions and migration/rollback. Before M04, approve canonical envelope, OpenAPI, message and file schemas, compatibility, receipt and quarantine policies. Before M05-M07, approve mandate authority, approval matrix, attempt state machine, provider idempotency/enquiry, settlement evidence and allocation rules. Before M08-M12, approve payroll, disbursement, detailed ledger and reconciliation specifications. No dispatch path may bypass those controls. Before analytics, approve source export schema, lineage, metrics and late-event treatment. Record exact schemas and deployment evidence in later repository documents; this baseline deliberately does not invent concrete bank schemas or credentials.
+
+## M01 foundation update
+
+M01 adds four independent executable application foundations, separate databases, a development identity provider and technical RabbitMQ and SFTP transports. The Hub remains one deployment and persistence boundary. These technical foundations do not implement financial processing.

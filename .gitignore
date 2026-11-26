@@ -1,5 +1,6 @@
 # Local Python and JavaScript tooling
 .venv/
+.venv-security/
 venv/
 __pycache__/
 *.py[cod]

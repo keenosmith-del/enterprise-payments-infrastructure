@@ -10,6 +10,9 @@ bootstrap: credentials
 	python3 -m venv .venv
 	$(PYTHON) -m pip install --require-hashes -r requirements.lock
 	npm ci
+	npx playwright install chromium
+	python3 -m venv .venv-security
+	.venv-security/bin/pip install --require-hashes -r security-requirements.lock
 up: credentials
 	$(COMPOSE) up -d --build --wait
 down:
@@ -32,8 +35,5 @@ typecheck:
 test:
 	$(PYTHON) -m pytest tests/unit -q
 
-verify: lint typecheck test
-	$(PYTHON) scripts/validate_baseline.py
-	npm audit --audit-level=moderate
-	npm run typecheck
-	npm run build
+verify:
+	bash scripts/m01/verify.sh

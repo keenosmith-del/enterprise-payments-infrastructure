@@ -57,6 +57,8 @@ for item in BASE["source_definitions"]["document_03"]:
     check(item["text"] + " Acceptance evidence: " + item["acceptance"] in req, f"Missing original definition: {item['id']}")
 
 for p in ROOT.rglob("*.md"):
+    if any(part in {"node_modules", ".venv", ".venv-security", ".git", ".local", "dist"} for part in p.relative_to(ROOT).parts):
+        continue
     text = p.read_text(encoding="utf-8")
     check("\u2014" not in text, f"Em dash in {p.name}")
     check(not re.search(r"(?m)^\s*\|", text), f"Table row in {p.name}")

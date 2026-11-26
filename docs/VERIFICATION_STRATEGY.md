@@ -97,3 +97,7 @@ Use NFR-005 exactly as initial ambition: 100,000 synthetic policyholders and up 
 A run manifest must identify commit, seed, input hashes, environment, dependency versions, rule and calendar versions, fault schedule, start/end UTC, expected independent results and actual outputs. Evidence should include machine-readable results, logs with secrets redacted, control totals, independent provider records, migrations and trace exports. Record precise command and exit code, tests passed/failed/skipped/blocked separately. Tie each result to FR/NFR/FI/SC and milestone. Store under `evidence/<milestone>/<run-id>/` (proposed). No actual evidence is supplied by this initial bundle.
 
 Release blockers: any known unbalanced posting, duplicate effect, unauthorised execution, cross-tenant access, unsafe ambiguous retry, unexplained forced balancing or missing critical acceptance test. A deferred optional AI experiment is not a core blocker. A missed performance target requires explicit measured deviation and approval, not relabelling it as a pass.
+
+## M01 foundation update
+
+M01 adds real PostgreSQL identity boundary tests, Keycloak-issued token checks, RabbitMQ and SFTP tests, Compose startup and browser checks. See the M01 verification report for commands, run links and limitations.

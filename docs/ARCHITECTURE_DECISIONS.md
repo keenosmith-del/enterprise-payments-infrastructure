@@ -91,3 +91,7 @@ Candidate React/TypeScript/Vite interfaces, Keycloak/OIDC, Docker Compose profil
 ## 6. M00 assessment status
 
 The [M00 architecture assessment](milestones/m00/M00_ARCHITECTURE_ASSESSMENT.md) records proposed dispositions and owners for ADR-P01 through ADR-P09, plus provisional decisions M00-D01 to M00-D03. The [M00 verification record](milestones/m00/M00_ARCHITECTURE_VERIFICATION.md) records passed local feasibility checks and pending runtime evidence. The original decisions remain proposed.
+
+## M01 foundation update
+
+The M00 architecture direction was accepted for M01 foundation implementation. ADR-P01 independent persistence and ADR-P03 Python/PostgreSQL inform the database boundaries. ADR-P04 durable outbox and inbox and ADR-P05 financial posting remain for their dependent milestones.

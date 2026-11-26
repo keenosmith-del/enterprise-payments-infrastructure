@@ -1,0 +1,7 @@
+# M01 identity and security foundation
+
+The development Keycloak realm has distinct public clients for the four applications and a confidential integration service identity. The public clients use authorization code with PKCE for browser login. Synthetic human credentials and the service client secret are generated locally. The realm's tenant and legal entity user attributes are editable by administrators, not by the synthetic user. They are included in signed access tokens.
+
+Backends validate RS256 signatures using the configured JWKS endpoint and require issuer, audience, expiration, issued-at and subject. The protected tenant endpoint requires the human principal kind, `foundation-reader` role and `foundation.read` scope. It checks the requested tenant against verified claims and filters records to the legal entities in those claims. A service token cannot use the human endpoint. Missing identity configuration and unavailable dependencies fail closed.
+
+GitHub tests issue real tokens from a disposable Keycloak instance, exercise wrong audiences and invoke real backend endpoints with allowed and disallowed tenant scopes. Browser tests cover sign-in and protected data access. Cryptographic unit tests separately exercise expiry, issuer and signature failures; those unit tests are not a substitute for the real identity integration. This is development configuration using loopback HTTP and synthetic credentials, not a production identity deployment or an approval workflow.
