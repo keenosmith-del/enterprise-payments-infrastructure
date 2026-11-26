@@ -22,9 +22,10 @@ def test_authorised_transport_and_denied_access():
                             check=True, capture_output=True, text=True)
     assert result.stdout.strip() == "synthetic-technical-probe"
     with connect("policy_administration") as connection:
+        channel = connection.channel()
+        channel.confirm_delivery()
         with pytest.raises(pika.exceptions.ChannelClosedByBroker) as error:
-            connection.channel().basic_publish("epi.technical", "probe", b"unauthorised", mandatory=True)
-            connection.process_data_events(time_limit=2)
+            channel.basic_publish("epi.technical", "probe", b"unauthorised", mandatory=True)
         assert error.value.reply_code == 403
     with connect("banking_simulator") as connection:
         with pytest.raises(pika.exceptions.ChannelClosedByBroker) as error:
