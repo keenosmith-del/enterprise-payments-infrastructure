@@ -49,3 +49,13 @@ def test_invalid_signature_rejected(signed_tokens):
     with pytest.raises(HTTPException) as exc:
         verifier.verify(jwt.encode(claims, other, algorithm="RS256"))
     assert exc.value.status_code == 401
+
+
+def test_identity_key_service_outage_is_controlled(signed_tokens):
+    from jwt.exceptions import PyJWKClientConnectionError
+
+    verifier, key, claims = signed_tokens
+    verifier.keys.get_signing_key_from_jwt = Mock(side_effect=PyJWKClientConnectionError("unavailable"))
+    with pytest.raises(HTTPException) as error:
+        verifier.verify(jwt.encode(claims, key, algorithm="RS256"))
+    assert error.value.status_code == 503

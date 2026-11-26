@@ -5,7 +5,7 @@ from uuid import UUID
 import jwt
 from fastapi import HTTPException
 from jwt import PyJWKClient
-from jwt.exceptions import PyJWTError, PyJWKClientError
+from jwt.exceptions import PyJWTError, PyJWKClientError, PyJWKClientConnectionError
 
 
 @dataclass(frozen=True)
@@ -43,5 +43,7 @@ class OIDCVerifier:
                 raise ValueError("invalid roles")
             return Principal(str(claims["sub"]), kind, frozenset(UUID(t) for t in tenant_values),
                              frozenset(UUID(entity) for entity in entity_values), frozenset(roles), frozenset(scopes.split()))
-        except (PyJWTError, PyJWKClientError, ValueError, TypeError, KeyError):
+        except PyJWKClientConnectionError:
+            raise HTTPException(status_code=503, detail="Identity provider unavailable") from None
+        except (PyJWTError, PyJWKClientError, ValueError, TypeError, KeyError, AttributeError):
             raise HTTPException(status_code=401, detail="Invalid credentials") from None
