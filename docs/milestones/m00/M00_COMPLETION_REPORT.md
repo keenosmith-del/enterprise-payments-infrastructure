@@ -1,10 +1,10 @@
 # M00 completion report
 
-Revision 0.1 | 26 November 2026 | EPI 0.1.0 | Status: blocked.
+Revision 0.2 | 26 November 2026 | EPI 0.1.0 | Status: verification passed on GitHub Actions; maintainer acceptance pending.
 
 ## 01. Repository status
 
-Canonical path: `/Users/keenosmith/Programming/Projects/qlink-moneyhub/enterprise-payments-infrastructure`. Intended remote: [GitHub](https://github.com/keenosmith-del/enterprise-payments-infrastructure). Target branches are `main` for the approved foundation and `codex/m00-architecture-baseline` for M00. The canonical directory has no Git metadata. `git init -b main` was denied at `.git`. Shell GitHub requests could not resolve or reach GitHub, the GitHub integration returned 404 and browser access required sign-in. Repository visibility and existence remain unverified. There is no initial, final or remote SHA and Git working tree status is unavailable.
+The canonical checkout is at `/Users/keenosmith/Programming/Projects/qlink-moneyhub/enterprise-payments-infrastructure` and the authoritative remote is [GitHub](https://github.com/keenosmith-del/enterprise-payments-infrastructure). The M00 baseline was pushed to `main` at `b517aba5ae1ceaa105589bafd8c6693850beabcd`. The SFTP correction was pushed at `c96725c1ca22700b7d80d74c51efb5bf6a2bfcb7`. This report records the subsequent hosted verification; the original local environment observations below remain historical.
 
 ## 02. Engineering baseline integrity
 
@@ -28,11 +28,11 @@ The [financial contract baseline](M00_FINANCIAL_CONTRACT_BASELINE.md) defines pr
 
 ## 07. Verification evidence
 
-Three local probe tests passed, zero failed and zero skipped. PostgreSQL, RabbitMQ, Parquet replay, authenticated networked SFTP and image/resource execution checks are blocked. Syntax checks for Python and Bash, Compose configuration parsing and baseline validation passed. See [verification and reproduction](M00_ARCHITECTURE_VERIFICATION.md) and [actual command output](../../../evidence/m00/local-verification.txt) for results and exit statuses.
+The [successful GitHub Actions run](https://github.com/keenosmith-del/enterprise-payments-infrastructure/actions/runs/45741263995) tested correction commit `c96725c1ca22700b7d80d74c51efb5bf6a2bfcb7`. Baseline validation and Python compilation passed; the local probe suite ran three tests with zero failures and zero skips. The services job ran three infrastructure tests with zero failures and zero skips, including the PostgreSQL, RabbitMQ and Parquet probes. The networked SFTP job passed public-key authentication, host verification, transfer, directory separation and its negative checks. All three jobs exited successfully. The local `bash scripts/m00/probe_sftp_ssh.sh` attempt exited 1 because the Docker daemon was unavailable; it is not counted as a pass. The hosted Linux run does not establish an ARM64 image run or Power BI execution. See [verification and reproduction](M00_ARCHITECTURE_VERIFICATION.md) and [original local output](../../../evidence/m00/local-verification.txt).
 
 ## 08. GitHub Actions
 
-The M00 verification workflow has baseline, infrastructure and networked SFTP jobs. No workflow run, run URL or corrective commit exists because no push was possible. The workflow requires verification on the final milestone SHA once GitHub delivery is restored.
+The [first run](https://github.com/keenosmith-del/enterprise-payments-infrastructure/actions/runs/45739210577) passed baseline and services but failed networked SFTP because StrictModes rejected the ownership of the bind-mounted authorised key. The correction mounts generated keys read-only at `/probe-keys-input`, then copies the host private key and authorised public keys into root-owned `/probe-keys` with modes 0600 and 0644 respectively; the directory is 0755. StrictModes, host verification, public-key authentication, chroot isolation and negative tests remain in place. The replacement run linked above passed baseline, services and networked-sftp. GitHub reported a Node.js 20 deprecation annotation for the pinned checkout action; the runner used Node.js 24 and the jobs passed.
 
 ## 09. Documentation
 
@@ -40,8 +40,8 @@ Added seven M00 specifications and reports, reproducible probes, evidence and wo
 
 ## 10. Milestone 01 readiness
 
-The [M01 preparation](M00_M01_IMPLEMENTATION_PREPARATION.md) describes the application paths, dependency and migration plans, health and security expectations, test scope and prerequisites. Implementation is gated on restoring GitHub delivery and infrastructure verification, resolving design approvals, obtaining M00 acceptance, then receiving separate M01 authorisation.
+The [M01 preparation](M00_M01_IMPLEMENTATION_PREPARATION.md) describes the application paths, dependency and migration plans, health and security expectations, test scope and prerequisites. Implementation remains gated on resolving design approvals, obtaining M00 acceptance, then receiving separate M01 authorisation.
 
 ## 11. Final delivery status
 
-Canonical files exist locally. Git staging, commit, push, remote verification and clean working tree confirmation are blocked. The documentation baseline and the runnable local checks passed. Full runtime verification and GitHub Actions are outstanding. M00 remains incomplete. Maintainer action is needed to provide a session with canonical Git write access, authenticated GitHub access and network plus working Docker, or an approved equivalent runner. Milestone acceptance and M01 scope approval follow final verification.
+The M00 verification workflow passed on the correction commit. This report update follows that run and triggers a fresh workflow on its own commit. Formal design and finance reviews and maintainer acceptance remain open; M01 requires separate authorisation. No M01 implementation was started. No application migrations or production deployment were performed.
