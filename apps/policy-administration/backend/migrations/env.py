@@ -22,6 +22,7 @@ else:
         connection.execute(text("CREATE OR REPLACE VIEW foundation_schema_revision AS SELECT version_num FROM alembic_version"))
         connection.execute(text("GRANT SELECT ON foundation_schema_revision TO policy_administration_runtime"))
         # Grant only application records, never Alembic's administration table.
-        connection.execute(text("GRANT SELECT, INSERT, UPDATE, DELETE ON tenant, legal_entity, foundation_principal, application_config TO policy_administration_runtime"))
+        connection.execute(text("REVOKE ALL PRIVILEGES ON tenant, legal_entity, foundation_principal, application_config FROM policy_administration_runtime"))
+        connection.execute(text("GRANT SELECT ON tenant, legal_entity, foundation_principal, application_config TO policy_administration_runtime"))
         connection.commit()
     engine.dispose()

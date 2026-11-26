@@ -33,8 +33,8 @@ def test_bootstrap_migrate_seed_and_role_isolation() -> None:
         for _ in range(2):
             subprocess.run(["alembic", "-c", str(ROOT / "apps" / path / "backend/alembic.ini"), "upgrade", "head"], env=env, cwd=ROOT, check=True)
         runtime = connection(app, "runtime")
-        seed(runtime)
-        seed(runtime)
+        seed(migration)
+        seed(migration)
         with psycopg.connect(runtime) as conn:
             assert conn.execute("SELECT count(*) FROM tenant").fetchone()[0] == 2
             assert conn.execute("SELECT count(*) FROM legal_entity").fetchone()[0] == 2
@@ -48,6 +48,10 @@ def test_bootstrap_migrate_seed_and_role_isolation() -> None:
                 with pytest.raises(psycopg.errors.InsufficientPrivilege):
                     conn.execute(statement)
         with psycopg.connect(runtime) as conn:
+            with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                conn.execute("DELETE FROM tenant")
+        with psycopg.connect(migration) as conn:
+            conn.execute(f"SET ROLE {app}_owner")
             with pytest.raises(psycopg.errors.ForeignKeyViolation):
                 conn.execute("INSERT INTO legal_entity (id, tenant_id, name) VALUES (%s, %s, %s)",
                              ("30000000-0000-4000-8000-000000000001", "30000000-0000-4000-8000-000000000002", "Invalid"))
